@@ -8,10 +8,52 @@ const speech = require('@google-cloud/speech');
 let mainWindow;
 let tray;
 
+// Backend server configuration
+const BACKEND_BASE_URL = 'http://localhost:3001';
+
 //Set Google credentials
 process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, process.env.GOOGLE_APPLICATION_CREDENTIALS);
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
+});
+
+// Backend API communication handler
+ipcMain.handle('backend-api', async (event, method, endpoint, data = null) => {
+  try {
+    const url = `${BACKEND_BASE_URL}${endpoint}`;
+    let response;
+
+    switch (method.toUpperCase()) {
+      case 'GET':
+        response = await axios.get(url);
+        break;
+      case 'POST':
+        response = await axios.post(url, data);
+        break;
+      case 'PUT':
+        response = await axios.put(url, data);
+        break;
+      case 'DELETE':
+        response = await axios.delete(url);
+        break;
+      default:
+        throw new Error(`Unsupported HTTP method: ${method}`);
+    }
+
+    return {
+      success: true,
+      data: response.data,
+      status: response.status
+    };
+  } catch (error) {
+    console.error(`Backend API Error (${method} ${endpoint}):`, error);
+    return {
+      success: false,
+      error: error.message,
+      status: error.response?.status || 500,
+      data: error.response?.data || null
+    };
+  }
 });
 
 function createWindow() {
@@ -100,8 +142,8 @@ function createTray() {
       label: 'Connect MyAnimeList',
       click: async () => {
         try {
-          // Call your local backend endpoint to get the auth URL
-          const response = await axios.get('http://localhost:3001/api/mal/auth');
+          // Call backend through the new API handler
+          const response = await axios.get(`${BACKEND_BASE_URL}/api/mal/auth`);
           
           if (response.data && response.data.authURL) {
             // Open the URL in the user's default browser
@@ -138,8 +180,6 @@ app.whenReady().then(() => {
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
 });
-
-
 
 const client = new speech.SpeechClient();
 
