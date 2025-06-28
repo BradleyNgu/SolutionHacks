@@ -53,11 +53,7 @@ Remember to always respond in character as a devoted anime waifu companion!`
           'Japanese (Japan)',
           'Microsoft Haruka - Japanese (Japan)',
           'Google Japanese Female',
-          'Kyoko',
-          // Fallback to English female voices if Japanese not available
-          'Google US English Female', 
-          'Microsoft Zira',
-          'Samantha'
+          'Kyoko'
         ]
       },
       google: {
