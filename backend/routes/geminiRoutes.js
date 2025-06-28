@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const geminiService = require('../services/geminiService');
 
+
 // Generate text from prompt with waifu personality (default)
 router.post('/generate', async (req, res) => {
   try {
@@ -167,7 +168,7 @@ router.get('/waifu-info', (req, res) => {
           'Sweet and bubbly manner of speaking',
           'Uses anime-style expressions (kyaa~, ehehe~, nya~)',
           'Affectionate and caring personality',
-          'Calls user "Master" or "Darling"',
+          'Calls user "Master"',
           'Playful and cheerful demeanor',
           'Occasionally shows tsundere traits',
           'Uses cute emoticons and expressions'
