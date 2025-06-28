@@ -8,6 +8,9 @@ let tray;
 
 //Set Google credentials
 process.env.GOOGLE_APPLICATION_CREDENTIALS = path.join(__dirname, 'google-credentials.json');
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -20,7 +23,7 @@ function createWindow() {
     transparent: true,
     focusable: false,
     webPreferences: {
-      nodeIntegration: true,
+      preload: path.join(__dirname, 'preload.js'),nodeIntegration: true,
       contextIsolation: false,
       media: true
     }
