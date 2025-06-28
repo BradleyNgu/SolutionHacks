@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron');
+require('dotenv').config();
 
 const speechBubble = document.getElementById('speech-bubble');
 const maidImg = document.getElementById('maid');
@@ -116,7 +117,7 @@ function hideSpeechBubble() {
 async function sendToGemini(promptText) {
   showSpeechBubble("💭 Thinking...");
 
-  const apiKey = "AIzaSyBsMY3b_YqxPzwFPYamP2u_crA-GCYHi9A"; 
+  const apiKey = process.env.GEMINI_KEY; 
 
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
