@@ -82,8 +82,8 @@ class TTSService {
       voice: {
         name: options.voiceName || waifuSettings.preferredVoices[0] || 'ja-JP-Standard-B',
         lang: options.language || waifuSettings.language || 'en-US',
-        rate: options.rate || waifuSettings.rate || 1.1,
-        pitch: options.pitch || waifuSettings.pitch || 1.7,
+        rate: options.rate || waifuSettings.rate || config.tts.audioConfig.speakingRate,
+        pitch: options.pitch || waifuSettings.pitch || config.tts.audioConfig.pitch,
         volume: options.volume || waifuSettings.volume || 1.0
       },
       instructions: 'Use Web Speech API with Japanese female voice speaking English'
@@ -105,8 +105,8 @@ class TTSService {
       config: {
         voice: options.voiceName || null, // Let browser pick best Japanese female voice
         lang: options.language || waifuSettings.language || 'en-US',
-        rate: options.rate || waifuSettings.rate || 1.1,
-        pitch: options.pitch || waifuSettings.pitch || 1.7,
+        rate: options.rate || waifuSettings.rate || config.tts.audioConfig.speakingRate,
+        pitch: options.pitch || waifuSettings.pitch || config.tts.audioConfig.pitch,
         volume: options.volume || waifuSettings.volume || 1.0
       },
       waifuHints: {
@@ -217,8 +217,8 @@ class TTSService {
       provider: options.provider || 'web',
       language: options.language || 'en-US', // English content
       voiceName: options.voiceName || null,
-      rate: Math.max(0.1, Math.min(3.0, options.rate || 1.1)), // Good rate for English with Japanese accent
-      pitch: Math.max(0.0, Math.min(2.0, options.pitch || 1.7)), // High pitch for waifu voice
+      rate: Math.max(0.1, Math.min(3.0, options.rate || config.tts.waifuVoiceSettings.web.rate || config.tts.audioConfig.speakingRate)),
+      pitch: Math.max(0.0, Math.min(2.0, options.pitch || config.tts.waifuVoiceSettings.web.pitch || config.tts.audioConfig.pitch)),
       volume: Math.max(0.0, Math.min(1.0, options.volume || 1.0)),
       disableWaifu: options.disableWaifu || false
     };

@@ -88,12 +88,12 @@
                 <select id="voiceSelect"></select>
             </div>
             <div>
-                <label><strong>Pitch: </strong><span id="pitchValue">1.7</span></label>
-                <input type="range" id="pitchSlider" min="0.5" max="2" step="0.1" value="1.7">
+                <label><strong>Pitch: </strong><span id="pitchValue">1.1</span></label>
+                <input type="range" id="pitchSlider" min="0.5" max="2" step="0.1" value="1.1">
             </div>
             <div>
-                <label><strong>Rate: </strong><span id="rateValue">1.1</span></label>
-                <input type="range" id="rateSlider" min="0.5" max="2" step="0.1" value="1.1">
+                <label><strong>Rate: </strong><span id="rateValue">1.4</span></label>
+                <input type="range" id="rateSlider" min="0.5" max="2" step="0.1" value="1.4">
             </div>
         </div>
 
@@ -193,7 +193,7 @@
             speakWaifu();
         }
 
-        function speakText(text, pitch = 1.7, rate = 1.1, voiceName = '') {
+        function speakText(text, pitch = 1.1, rate = 1.4, voiceName = '') {
             speechSynthesis.cancel();
             
             const utterance = new SpeechSynthesisUtterance(text);
