@@ -1,0 +1,24 @@
+{
+  "name": "solutionhacks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BradleyNgu/SolutionHacks.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/BradleyNgu/SolutionHacks/issues"
+  },
+  "homepage": "https://github.com/BradleyNgu/SolutionHacks#readme",
+  "devDependencies": {
+    "electron": "^37.1.0"
+  }
+}
