@@ -16,7 +16,7 @@ function createWindow () {
     transparent: true,
     focusable: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      
     }
   });
 
@@ -89,13 +89,10 @@ ipcMain.on('trigger-move', () => {
 function createTray(){
   tray = new Tray(path.join(__dirname, 'icon.png'));
   const contextMenu = Menu.buildFromTemplate([
-    {
-      label: 'Quit',
-      click: () => {
-        app.isQuiting = true;
-        app.quit();
-      }
-    }
+    {label: 'Quit', click: () => { app.isQuiting = true; app.quit();}},
+    {label: 'Mute', click: () => {}}
+    
+     
   ]);
   
   tray.setToolTip('My App');
