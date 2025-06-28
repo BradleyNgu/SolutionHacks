@@ -1,7 +1,9 @@
 const { app, Tray, BrowserWindow, Menu, ipcMain} = require('electron');
 const path = require('path');
 
-  
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
 
 function createWindow () {
   const mainWindow = new BrowserWindow({
