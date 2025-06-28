@@ -17,19 +17,11 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Routes
 const geminiRoutes = require('./routes/geminiRoutes');
 const ttsRoutes = require('./routes/ttsRoutes');
+const malRoutes = require('./routes/malRoutes');
 
 app.use('/api/gemini', geminiRoutes);
 app.use('/api/tts', ttsRoutes);
-
-//redirect URL route
-app.get('/mal/callback', (req, res) => {
-  const code = req.query.code;
-  // TODO: exchange code for access token with MyAnimeList here
-  console.log('Received authorization code:', code);
-
-  // For now, just send a response so the browser doesn't hang
-  res.send('Authorization successful! You can close this window.');
-});
+app.use('/api/mal', malRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
