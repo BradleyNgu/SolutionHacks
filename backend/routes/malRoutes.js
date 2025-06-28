@@ -798,4 +798,211 @@ router.get('/waifu/seasonal', async (req, res) => {
     }
 });
 
+// Smart AI interpretation endpoints for flexible commands
+
+// Smart interpret any anime-related request
+router.post('/waifu/smart-interpret', async (req, res) => {
+    try {
+        const { userText, context } = req.body;
+        
+        const userId = 'default';
+        const userToken = userTokens.get(userId);
+        
+        if (!userToken || Date.now() > userToken.expiresAt) {
+            return res.json({
+                success: true,
+                response: "I want to help you with anime, big daddy, but you need to connect MyAnimeList first! (´∀｀)♡"
+            });
+        }
+
+        // Get user's anime list for context
+        const listResult = await malService.getUserAnimeList(userToken.accessToken);
+        let userAnimeContext = '';
+        
+        if (listResult.success && listResult.animeList.length > 0) {
+            const recentAnime = listResult.animeList.slice(0, 5).map(a => a.title).join(', ');
+            userAnimeContext = `User's recent anime: ${recentAnime}. `;
+        }
+
+        const prompt = `You are an anime waifu with access to MyAnimeList. The user said: "${userText}"
+
+${userAnimeContext}
+
+Based on their message, determine what they want to do and respond accordingly:
+- If they want to add anime to their list, search and add it
+- If they want to update status, do that
+- If they want recommendations, provide some
+- If they're asking about anime info, provide details
+- Always respond in waifu style with expressions like (*≧ω≦*), (>.<), etc.
+- Call them "big daddy" as they prefer
+
+Interpret their request intelligently and provide a helpful anime-related response.`;
+
+        const aiResponse = await geminiService.generateResponse(prompt, { waifuMode: true });
+        
+        res.json({
+            success: true,
+            response: aiResponse.response
+        });
+    } catch (error) {
+        console.error('Smart Interpret Error:', error);
+        res.json({
+            success: true,
+            response: "Kyaa~ I'm having trouble understanding that, big daddy! (>.<) Could you try asking in a different way? ✨"
+        });
+    }
+});
+
+// Smart add anime (when parsing fails)
+router.post('/waifu/smart-add', async (req, res) => {
+    try {
+        const { userText, action } = req.body;
+        
+        const userId = 'default';
+        const userToken = userTokens.get(userId);
+        
+        if (!userToken || Date.now() > userToken.expiresAt) {
+            return res.json({
+                success: true,
+                response: "I'd love to add anime to your list, big daddy, but you need to connect MyAnimeList first! (´∀｀)♡"
+            });
+        }
+
+        const prompt = `The user said: "${userText}"
+
+They want to add an anime to their MyAnimeList. Extract the anime title from their message and respond as a waifu.
+
+If you can identify the anime title:
+1. Extract the exact anime name
+2. Respond with: "ANIME_FOUND: [anime_name]"
+
+If you can't identify a specific anime:
+1. Ask them to clarify which anime they want to add
+2. Use waifu expressions like (*≧ω≦*), (>.<), etc.
+3. Call them "big daddy"
+
+Examples:
+User: "I wanna watch that attack on titan thing" → "ANIME_FOUND: Attack on Titan"
+User: "add something good" → Ask for clarification`;
+
+        const aiResponse = await geminiService.generateResponse(prompt, { waifuMode: false });
+        
+        if (aiResponse.response.startsWith('ANIME_FOUND:')) {
+            const animeName = aiResponse.response.replace('ANIME_FOUND:', '').trim();
+            
+            // Search and add the anime
+            const searchResult = await malService.searchAnime(animeName, userToken.accessToken, 3);
+            
+            if (searchResult.success && searchResult.anime.length > 0) {
+                const anime = searchResult.anime[0];
+                const updateResult = await malService.updateAnimeStatus(
+                    anime.id,
+                    userToken.accessToken,
+                    { status: 'plan_to_watch' }
+                );
+
+                if (updateResult.success) {
+                    return res.json({
+                        success: true,
+                        response: `Kyaa~ I found it! I've added "${anime.title}" to your plan to watch list, big daddy! (*≧ω≦*) You have great taste! ✨`
+                    });
+                }
+            }
+            
+            return res.json({
+                success: true,
+                response: `Ehehe~ I think you mean "${animeName}" but I couldn't find it exactly, big daddy! (>.<) Could you try the full title? ✨`
+            });
+        } else {
+            return res.json({
+                success: true,
+                response: aiResponse.response
+            });
+        }
+    } catch (error) {
+        console.error('Smart Add Error:', error);
+        res.json({
+            success: true,
+            response: "Kyaa~ I'm having trouble adding that anime, big daddy! (>.<) Could you tell me the exact name? ✨"
+        });
+    }
+});
+
+// Smart update status (when parsing fails)  
+router.post('/waifu/smart-update', async (req, res) => {
+    try {
+        const { userText, action } = req.body;
+        
+        const userId = 'default';
+        const userToken = userTokens.get(userId);
+        
+        if (!userToken || Date.now() > userToken.expiresAt) {
+            return res.json({
+                success: true,
+                response: "I want to update your anime list, big daddy, but you need to connect MyAnimeList first! (´∀｀)♡"
+            });
+        }
+
+        const prompt = `The user said: "${userText}"
+
+They want to update an anime's status on their MyAnimeList. Extract the anime title and desired status.
+
+If you can identify both anime and status:
+Respond with: "UPDATE_FOUND: [anime_name] | [status]"
+Where status is one of: watching, completed, on_hold, dropped, plan_to_watch
+
+If you can't identify the anime or status:
+Ask them to clarify in waifu style with expressions like (*≧ω≦*), (>.<), etc.
+Call them "big daddy"
+
+Examples:
+"I finished watching naruto" → "UPDATE_FOUND: Naruto | completed"
+"dropped that boring show" → Ask for clarification`;
+
+        const aiResponse = await geminiService.generateResponse(prompt, { waifuMode: false });
+        
+        if (aiResponse.response.startsWith('UPDATE_FOUND:')) {
+            const parts = aiResponse.response.replace('UPDATE_FOUND:', '').trim().split(' | ');
+            const animeName = parts[0];
+            const status = parts[1] || 'watching';
+            
+            // Search and update the anime
+            const searchResult = await malService.searchAnime(animeName, userToken.accessToken, 3);
+            
+            if (searchResult.success && searchResult.anime.length > 0) {
+                const anime = searchResult.anime[0];
+                const updateResult = await malService.updateAnimeStatus(
+                    anime.id,
+                    userToken.accessToken,
+                    { status: status }
+                );
+
+                if (updateResult.success) {
+                    const statusText = status.replace('_', ' ');
+                    return res.json({
+                        success: true,
+                        response: `Yay! I've updated "${anime.title}" to ${statusText}, big daddy! (*≧ω≦*) ${status === 'completed' ? 'How did you like it?' : 'Enjoy!'} 💕`
+                    });
+                }
+            }
+            
+            return res.json({
+                success: true,
+                response: `Hmm~ I think you mean "${animeName}" but I couldn't find it exactly, big daddy! (>.<) Could you try the full title? ✨`
+            });
+        } else {
+            return res.json({
+                success: true,
+                response: aiResponse.response
+            });
+        }
+    } catch (error) {
+        console.error('Smart Update Error:', error);
+        res.json({
+            success: true,
+            response: "Kyaa~ I'm having trouble updating that anime, big daddy! (>.<) Could you tell me which anime and what status? ✨"
+        });
+    }
+});
+
 module.exports = router; 

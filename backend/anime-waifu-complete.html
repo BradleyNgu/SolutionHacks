@@ -204,7 +204,16 @@
             <div class="voice-controls">
                 <button id="micButton" class="mic-button" onclick="toggleListening()">🎤</button>
                 <p><strong>Click microphone to talk to your waifu!</strong></p>
-                <p>Try saying: "Show me my anime list", "Recommend some anime", "What's popular this season?"</p>
+                <p><strong>🎌 Natural Commands:</strong></p>
+                <p style="font-size: 13px; color: #666;">
+                    • <em>"I want to watch Attack on Titan"</em><br>
+                    • <em>"I finished watching Naruto"</em><br>  
+                    • <em>"What should I watch next?"</em><br>
+                    • <em>"I've been meaning to check out One Piece"</em><br>
+                    • <em>"I think Death Note is amazing, give it a 9"</em><br>
+                    • <em>"Show me what's popular this season"</em><br>
+                    • <em>"Tell me about my anime list"</em>
+                </p>
             </div>
             <div class="voice-text" id="recognizedText">Your voice input will appear here...</div>
             <div class="controls-grid">
@@ -313,18 +322,21 @@
             }
         }
 
-        // Smart anime command handler
+        // Smart anime command handler with flexible natural language
         async function handleAnimeCommand(text) {
             const lowerText = text.toLowerCase();
             
             try {
-                // Show anime list
-                if (lowerText.includes('show') && (lowerText.includes('list') || lowerText.includes('my anime'))) {
+                // Show anime list (very flexible)
+                if ((lowerText.includes('show') || lowerText.includes('what') || lowerText.includes('tell me')) && 
+                    (lowerText.includes('list') || lowerText.includes('my anime') || lowerText.includes('watching'))) {
                     return await fetch('http://localhost:3001/api/mal/waifu/list-summary');
                 }
                 
-                // Get recommendations
-                if (lowerText.includes('recommend') || lowerText.includes('suggest')) {
+                // Get recommendations (flexible)
+                if (lowerText.includes('recommend') || lowerText.includes('suggest') || 
+                    lowerText.includes('what should i watch') || lowerText.includes('something to watch') ||
+                    lowerText.includes('any good anime') || lowerText.includes('what to watch')) {
                     return await fetch('http://localhost:3001/api/mal/waifu/recommend', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -332,36 +344,66 @@
                     });
                 }
                 
-                // Add anime to list
-                if ((lowerText.includes('add') || lowerText.includes('put')) && 
-                    (lowerText.includes('list') || lowerText.includes('watch'))) {
+                // Add anime to list (much more flexible)
+                if (lowerText.includes('add') || lowerText.includes('put') || 
+                    lowerText.includes('want to watch') || lowerText.includes('wanna watch') ||
+                    lowerText.includes('planning to watch') || lowerText.includes('gonna watch') ||
+                    lowerText.includes('interested in') || lowerText.includes('check out') ||
+                    lowerText.includes('start watching') || lowerText.includes('been meaning to')) {
                     return await handleAddAnime(text);
                 }
                 
-                // Update anime status
-                if (lowerText.includes('mark') || lowerText.includes('set') || 
-                    lowerText.includes('completed') || lowerText.includes('watching') || 
-                    lowerText.includes('dropped') || lowerText.includes('finished')) {
+                // Update anime status (flexible)
+                if (lowerText.includes('completed') || lowerText.includes('finished') || 
+                    lowerText.includes('done with') || lowerText.includes('watched all') ||
+                    lowerText.includes('dropped') || lowerText.includes('quit') ||
+                    lowerText.includes('stopped watching') || lowerText.includes('gave up') ||
+                    lowerText.includes('currently watching') || lowerText.includes('watching now') ||
+                    lowerText.includes('started watching') || lowerText.includes('on hold') ||
+                    lowerText.includes('paused') || lowerText.includes('taking a break')) {
                     return await handleUpdateStatus(text);
                 }
                 
-                // Rate anime
-                if ((lowerText.includes('rate') || lowerText.includes('score') || lowerText.includes('give')) && 
-                    (lowerText.match(/\d+/) || lowerText.includes('ten') || lowerText.includes('nine'))) {
+                // Rate anime (flexible)
+                if ((lowerText.includes('rate') || lowerText.includes('score') || lowerText.includes('give') || 
+                     lowerText.includes('thought') || lowerText.includes('liked') || lowerText.includes('loved') ||
+                     lowerText.includes('hated') || lowerText.includes('amazing') || lowerText.includes('terrible')) &&
+                    (lowerText.match(/\d+/) || lowerText.includes('ten') || lowerText.includes('nine') ||
+                     lowerText.includes('eight') || lowerText.includes('seven') || lowerText.includes('perfect'))) {
                     return await handleRateAnime(text);
                 }
                 
-                // Search anime
-                if (lowerText.includes('search') || lowerText.includes('find') || lowerText.includes('look for')) {
+                // Search anime (flexible)
+                if (lowerText.includes('search') || lowerText.includes('find') || lowerText.includes('look for') ||
+                    lowerText.includes('tell me about') || lowerText.includes('info about') ||
+                    lowerText.includes('heard about') || lowerText.includes('know about')) {
                     return await handleSearchAnime(text);
                 }
                 
-                // Seasonal/popular anime
-                if (lowerText.includes('season') || lowerText.includes('popular') || lowerText.includes('trending')) {
+                // Seasonal/popular anime (flexible)
+                if (lowerText.includes('season') || lowerText.includes('popular') || lowerText.includes('trending') ||
+                    lowerText.includes('current') || lowerText.includes('airing') || lowerText.includes('new anime') ||
+                    lowerText.includes('hot') || lowerText.includes('best') || lowerText.includes('top anime')) {
                     return await fetch('http://localhost:3001/api/mal/waifu/seasonal');
                 }
                 
-                // Default: Let waifu handle with anime context
+                // Check if text contains potential anime titles and let waifu decide
+                const hasAnimeKeywords = lowerText.includes('anime') || lowerText.includes('manga') ||
+                    lowerText.includes('watch') || lowerText.includes('episode') || lowerText.includes('series');
+                
+                if (hasAnimeKeywords) {
+                    // Let the waifu AI interpret the request intelligently
+                    return await fetch('http://localhost:3001/api/mal/waifu/smart-interpret', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            userText: text,
+                            context: "User has MyAnimeList connected. Try to understand what they want to do with anime."
+                        })
+                    });
+                }
+                
+                // Default: Regular waifu chat with anime context
                 return await fetch('http://localhost:3001/api/gemini/waifu', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -376,17 +418,21 @@
             }
         }
         
-        // Handle adding anime to list
+        // Handle adding anime to list (flexible)
         async function handleAddAnime(text) {
-            // Extract anime name from the text
-            const animeName = extractAnimeName(text, ['add', 'put', 'to my', 'list', 'watch']);
+            // Extract anime name with flexible keywords
+            const flexibleKeywords = ['add', 'put', 'to my', 'list', 'watch', 'want to', 'wanna', 
+                                      'planning to', 'gonna', 'interested in', 'check out', 'start', 'been meaning to'];
+            const animeName = extractAnimeName(text, flexibleKeywords);
             
-            if (!animeName) {
-                return await fetch('http://localhost:3001/api/gemini/waifu', {
+            if (!animeName || animeName.length < 2) {
+                // Try to let AI figure it out
+                return await fetch('http://localhost:3001/api/mal/waifu/smart-add', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        prompt: "User wants to add anime to their list but I couldn't understand which anime. Ask them to be more specific."
+                        userText: text,
+                        action: 'add_anime'
                     })
                 });
             }
@@ -403,27 +449,35 @@
             });
         }
         
-        // Handle updating anime status
+        // Handle updating anime status (flexible)
         async function handleUpdateStatus(text) {
-            const animeName = extractAnimeName(text, ['mark', 'set', 'completed', 'watching', 'dropped', 'finished', 'as']);
+            const flexibleKeywords = ['mark', 'set', 'completed', 'watching', 'dropped', 'finished', 'as', 
+                                      'done with', 'watched all', 'quit', 'stopped', 'gave up', 'currently', 
+                                      'started', 'on hold', 'paused', 'taking a break'];
+            const animeName = extractAnimeName(text, flexibleKeywords);
             
             let status = 'watching';
-            if (text.toLowerCase().includes('completed') || text.toLowerCase().includes('finished')) {
+            const lowerText = text.toLowerCase();
+            if (lowerText.includes('completed') || lowerText.includes('finished') || lowerText.includes('done with') || lowerText.includes('watched all')) {
                 status = 'completed';
-            } else if (text.toLowerCase().includes('dropped')) {
+            } else if (lowerText.includes('dropped') || lowerText.includes('quit') || lowerText.includes('stopped') || lowerText.includes('gave up')) {
                 status = 'dropped';
-            } else if (text.toLowerCase().includes('hold') || text.toLowerCase().includes('pause')) {
+            } else if (lowerText.includes('hold') || lowerText.includes('pause') || lowerText.includes('taking a break')) {
                 status = 'on_hold';
-            } else if (text.toLowerCase().includes('plan') || text.toLowerCase().includes('want')) {
+            } else if (lowerText.includes('plan') || lowerText.includes('want') || lowerText.includes('gonna')) {
                 status = 'plan_to_watch';
+            } else if (lowerText.includes('watching') || lowerText.includes('started')) {
+                status = 'watching';
             }
             
-            if (!animeName) {
-                return await fetch('http://localhost:3001/api/gemini/waifu', {
+            if (!animeName || animeName.length < 2) {
+                // Let AI interpret the status update request
+                return await fetch('http://localhost:3001/api/mal/waifu/smart-update', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        prompt: "User wants to update anime status but I couldn't understand which anime. Ask them to be more specific."
+                        userText: text,
+                        action: 'update_status'
                     })
                 });
             }
@@ -509,22 +563,29 @@
             });
         }
         
-        // Extract anime name from text by removing command words
+        // Extract anime name from text by removing command words (smarter version)
         function extractAnimeName(text, commandWords) {
             let cleanText = text.toLowerCase();
             
-            // Remove command words
+            // Remove command words more intelligently
             commandWords.forEach(word => {
-                cleanText = cleanText.replace(new RegExp(`\\b${word}\\b`, 'gi'), '');
+                cleanText = cleanText.replace(new RegExp(`\\b${word.replace(' ', '\\s+')}\\b`, 'gi'), ' ');
             });
             
-            // Clean up extra spaces and common words
+            // Clean up extra spaces and common words, but preserve potential anime titles
             cleanText = cleanText
-                .replace(/\b(to|my|anime|the|a|an)\b/gi, '')
+                .replace(/\b(to|my|anime|the|a|an|on|in|from|with|about|for|is|was|are|were)\b/gi, ' ')
+                .replace(/[^\w\s'-]/g, ' ') // Keep alphanumeric, spaces, apostrophes, hyphens
                 .trim()
                 .replace(/\s+/g, ' ');
             
-            return cleanText || null;
+            // If result is too short or generic, return null to trigger AI interpretation
+            const genericWords = ['watch', 'series', 'show', 'episode', 'season', 'list', 'good', 'great', 'amazing'];
+            if (!cleanText || cleanText.length < 3 || genericWords.includes(cleanText)) {
+                return null;
+            }
+            
+            return cleanText;
         }
 
         async function processVoiceInput(text) {
