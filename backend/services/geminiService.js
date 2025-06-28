@@ -13,18 +13,30 @@ class GeminiService {
   }
 
   /**
-   * Generate text using Gemini AI
+   * Apply waifu personality to prompt
+   * @param {string} userPrompt - The user's prompt
+   * @returns {string} - Prompt with waifu system prompt
+   */
+  applyWaifuPersonality(userPrompt) {
+    return `${config.gemini.waifuSystemPrompt}\n\nUser: ${userPrompt}\n\nWaifu Response:`;
+  }
+
+  /**
+   * Generate text using Gemini AI with anime waifu personality
    * @param {string} prompt - The text prompt to send to Gemini
    * @param {Object} options - Additional options for generation
    * @returns {Promise<string>} - Generated text response
    */
   async generateText(prompt, options = {}) {
     try {
+      // Apply waifu personality unless explicitly disabled
+      const finalPrompt = options.disableWaifu ? prompt : this.applyWaifuPersonality(prompt);
+      
       const requestConfig = {
         model: config.gemini.model,
-        contents: prompt,
+        contents: finalPrompt,
         config: {
-          temperature: options.temperature || 0.7,
+          temperature: options.temperature || 0.9, // Higher temperature for more creative waifu responses
           topP: options.topP || 0.8,
           topK: options.topK || 40,
           maxOutputTokens: options.maxTokens || 2048,
@@ -45,7 +57,7 @@ class GeminiService {
   }
 
   /**
-   * Generate text with conversation history
+   * Generate text with conversation history with waifu personality
    * @param {Array} messages - Array of conversation messages
    * @param {Object} options - Additional options for generation
    * @returns {Promise<string>} - Generated text response
@@ -53,15 +65,26 @@ class GeminiService {
   async generateWithHistory(messages, options = {}) {
     try {
       // Convert messages to a single prompt with context
-      const conversationText = messages
-        .map(msg => `${msg.role === 'assistant' ? 'Assistant' : 'User'}: ${msg.content}`)
-        .join('\n') + '\nAssistant:';
+      let conversationText;
+      
+      if (options.disableWaifu) {
+        // Standard conversation without waifu personality
+        conversationText = messages
+          .map(msg => `${msg.role === 'assistant' ? 'Assistant' : 'User'}: ${msg.content}`)
+          .join('\n') + '\nAssistant:';
+      } else {
+        // Apply waifu personality to conversation
+        conversationText = config.gemini.waifuSystemPrompt + '\n\n' +
+          messages
+            .map(msg => `${msg.role === 'assistant' ? 'Waifu' : 'Master'}: ${msg.content}`)
+            .join('\n') + '\nWaifu:';
+      }
 
       const requestConfig = {
         model: config.gemini.model,
         contents: conversationText,
         config: {
-          temperature: options.temperature || 0.7,
+          temperature: options.temperature || 0.9, // Higher temperature for more creative waifu responses
           topP: options.topP || 0.8,
           topK: options.topK || 40,
           maxOutputTokens: options.maxTokens || 2048,
@@ -82,7 +105,7 @@ class GeminiService {
   }
 
   /**
-   * Start a chat session with Gemini (simplified for new API)
+   * Start a chat session with Gemini (simplified for new API) with waifu personality
    * @param {Object} options - Chat options
    * @returns {Object} - Chat session configuration
    */
@@ -93,7 +116,7 @@ class GeminiService {
         sessionId: Date.now().toString(),
         config: {
           model: config.gemini.model,
-          temperature: options.temperature || 0.7,
+          temperature: options.temperature || 0.9, // Higher temperature for waifu personality
           topP: options.topP || 0.8,
           topK: options.topK || 40,
           maxOutputTokens: options.maxTokens || 2048,
@@ -102,7 +125,8 @@ class GeminiService {
           },
           ...options.config
         },
-        history: options.history || []
+        history: options.history || [],
+        waifuMode: !options.disableWaifu // Enable waifu mode by default
       };
     } catch (error) {
       console.error('Failed to start chat session:', error);
