@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎤 Voice Chat with Anime Waifu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff9a9e, #fecfef, #fad0c4);
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            color: #e91e63; 
+            text-align: center; 
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        button {
+            background: #e91e63;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            margin: 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        button:hover { 
+            background: #c2185b; 
+            transform: translateY(-2px);
+        }
+        button:disabled { 
+            background: #ccc; 
+            cursor: not-allowed; 
+            transform: none;
+        }
+        .big-button {
+            padding: 20px 40px;
+            font-size: 20px;
+            margin: 15px;
+        }
+        .voice-controls {
+            text-align: center;
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .chat-log {
+            background: #f1f3f4;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .message {
+            margin: 15px 0;
+            padding: 12px 18px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            margin-left: auto;
+            text-align: right;
+        }
+        .waifu-message {
+            background: #fce4ec;
+            border: 2px solid #e91e63;
+            margin-right: auto;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+        .status.listening { background: #fff3cd; color: #856404; }
+        .status.processing { background: #d1ecf1; color: #0c5460; }
+        .status.speaking { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.ready { background: #e2e3e5; color: #383d41; }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .mic-button {
+            background: #4caf50;
+            font-size: 24px;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            margin: 10px auto;
+            display: block;
+        }
+        .mic-button.listening {
+            background: #f44336;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .voice-text {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            min-height: 50px;
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Voice Chat with Anime Waifu</h1>
+        <p class="subtitle">Speak to your waifu and hear her respond with Japanese voice!</p>
+        
+        <div class="voice-controls">
+            <button id="micButton" class="mic-button" onclick="toggleListening()">🎤</button>
+            <p><strong>Click the microphone to start talking!</strong></p>
+            <p>Say things like: "Hello", "How are you?", "Tell me a joke"</p>
+        </div>
+
+        <div class="voice-text" id="recognizedText">Your voice input will appear here...</div>
+
+        <div class="controls-grid">
+            <button onclick="startVoiceChat()">🗣️ Start Voice Chat</button>
+            <button onclick="stopVoiceChat()">🛑 Stop Chat</button>
+            <button onclick="testWaifuVoice()">🎵 Test Waifu Voice</button>
+            <button onclick="clearChat()">🗑️ Clear Chat</button>
+        </div>
+
+        <div id="status" class="status ready">🎤 Ready to chat! Click the microphone and start talking.</div>
+
+        <div class="chat-log" id="chatLog">
+            <div class="waifu-message">
+                <strong>Waifu:</strong> Kyaa~ Hello big daddy! (*≧ω≦*) I'm ready to chat with you! Just click the microphone and start talking to me! (´∀｀)♡
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let recognition;
+        let isListening = false;
+        let isChatActive = false;
+        let currentUtterance = null;
+
+        // Initialize speech recognition
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+            } else if ('SpeechRecognition' in window) {
+                recognition = new SpeechRecognition();
+            } else {
+                updateStatus('❌ Speech recognition not supported in this browser. Try Chrome!', 'error');
+                return false;
+            }
+
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isListening = true;
+                updateMicButton();
+                updateStatus('🎤 Listening... speak now!', 'listening');
+            };
+
+            recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                document.getElementById('recognizedText').textContent = transcript;
+                
+                // If result is final, process it
+                if (event.results[event.results.length - 1].isFinal) {
+                    processVoiceInput(transcript.trim());
+                }
+            };
+
+            recognition.onerror = (event) => {
+                updateStatus(`❌ Speech recognition error: ${event.error}`, 'error');
+                isListening = false;
+                updateMicButton();
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                updateMicButton();
+                if (isChatActive) {
+                    updateStatus('🤖 Processing your message...', 'processing');
+                } else {
+                    updateStatus('🎤 Ready to listen again!', 'ready');
+                }
+            };
+
+            return true;
+        }
+
+        function toggleListening() {
+            if (!recognition) {
+                if (!initSpeechRecognition()) return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                // Stop any current speech
+                speechSynthesis.cancel();
+                recognition.start();
+            }
+        }
+
+        function updateMicButton() {
+            const button = document.getElementById('micButton');
+            if (isListening) {
+                button.textContent = '🔴';
+                button.classList.add('listening');
+            } else {
+                button.textContent = '🎤';
+                button.classList.remove('listening');
+            }
+        }
+
+        async function processVoiceInput(text) {
+            if (!text) return;
+
+            // Add user message to chat
+            addMessageToChat('You', text, 'user');
+
+            try {
+                updateStatus('🤖 Getting waifu response...', 'processing');
+
+                // Send to waifu AI
+                const response = await fetch('http://localhost:3001/api/gemini/waifu', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: text })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.response) {
+                    // Add waifu response to chat
+                    addMessageToChat('Waifu', data.response, 'waifu');
+                    
+                    // Speak the response
+                    await speakWaifuResponse(data.response);
+                } else {
+                    throw new Error('Invalid response from waifu AI');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                const errorMsg = "Kyaa~ Sorry big daddy, I'm having trouble right now! (>.<)";
+                addMessageToChat('Waifu', errorMsg, 'waifu');
+                await speakWaifuResponse(errorMsg);
+                updateStatus('❌ Error communicating with waifu AI. Check if backend is running!', 'error');
+            }
+        }
+
+        async function speakWaifuResponse(text) {
+            try {
+                updateStatus('🎵 Waifu is speaking...', 'speaking');
+
+                // Get TTS configuration from backend
+                const ttsResponse = await fetch('http://localhost:3001/api/tts/waifu-speak', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, provider: 'web' })
+                });
+
+                const ttsData = await ttsResponse.json();
+
+                // Speak using Web Speech API
+                speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                if (ttsData.success && ttsData.config) {
+                    utterance.pitch = ttsData.config.pitch;
+                    utterance.rate = ttsData.config.rate;
+                    utterance.volume = ttsData.config.volume || 1.0;
+                }
+
+                // Try to use Japanese voice
+                const voices = speechSynthesis.getVoices();
+                const japaneseVoice = voices.find(v => 
+                    v.lang.includes('ja') || 
+                    v.name.toLowerCase().includes('japan') ||
+                    v.name.toLowerCase().includes('haruka')
+                );
+                
+                if (japaneseVoice) {
+                    utterance.voice = japaneseVoice;
+                } else {
+                    // Fallback to female English voice
+                    const femaleVoice = voices.find(v => 
+                        v.lang.startsWith('en') && 
+                        v.name.toLowerCase().includes('female')
+                    );
+                    if (femaleVoice) utterance.voice = femaleVoice;
+                }
+
+                utterance.onend = () => {
+                    updateStatus('✅ Waifu finished speaking! Ready for your next message.', 'ready');
+                    currentUtterance = null;
+                };
+
+                utterance.onerror = () => {
+                    updateStatus('❌ Error in waifu speech', 'error');
+                    currentUtterance = null;
+                };
+
+                currentUtterance = utterance;
+                speechSynthesis.speak(utterance);
+
+            } catch (error) {
+                console.error('TTS Error:', error);
+                updateStatus('❌ Error in waifu voice synthesis', 'error');
+            }
+        }
+
+        function addMessageToChat(sender, message, type) {
+            const chatLog = document.getElementById('chatLog');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            messageDiv.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            chatLog.appendChild(messageDiv);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'ready') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function startVoiceChat() {
+            isChatActive = true;
+            updateStatus('🎤 Voice chat started! Click microphone to talk.', 'ready');
+        }
+
+        function stopVoiceChat() {
+            isChatActive = false;
+            if (recognition && isListening) {
+                recognition.stop();
+            }
+            speechSynthesis.cancel();
+            updateStatus('🛑 Voice chat stopped.', 'ready');
+        }
+
+        function testWaifuVoice() {
+            const testMessage = "Kyaa~ This is a test of my voice, big daddy! Do I sound cute? (*≧ω≦*)";
+            speakWaifuResponse(testMessage);
+        }
+
+        function clearChat() {
+            const chatLog = document.getElementById('chatLog');
+            chatLog.innerHTML = `
+                <div class="waifu-message">
+                    <strong>Waifu:</strong> Kyaa~ Chat cleared! Ready to talk again, big daddy! (´∀｀)♡
+                </div>
+            `;
+        }
+
+        // Initialize when page loads
+        window.onload = function() {
+            // Load voices
+            setTimeout(() => {
+                speechSynthesis.getVoices();
+            }, 100);
+            
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = () => {
+                    console.log('Voices loaded:', speechSynthesis.getVoices().length);
+                };
+            }
+
+            // Initialize speech recognition
+            initSpeechRecognition();
+        };
+    </script>
+</body>
+</html> 

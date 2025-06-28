@@ -17,9 +17,11 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Routes
 const geminiRoutes = require('./routes/geminiRoutes');
 const ttsRoutes = require('./routes/ttsRoutes');
+const malRoutes = require('./routes/malRoutes');
 
 app.use('/api/gemini', geminiRoutes);
 app.use('/api/tts', ttsRoutes);
+app.use('/api/mal', malRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

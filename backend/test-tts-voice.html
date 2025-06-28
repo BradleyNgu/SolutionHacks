@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 Anime Waifu Voice Tester (Japanese Voice + English)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+        }
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        h1 { color: #e91e63; text-align: center; }
+        button {
+            background: #e91e63;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #c2185b; }
+        .big-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .info-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Anime Waifu Voice Tester</h1>
+        <div class="info-box">
+            <strong>🎌 Japanese Female Voice + English Content = Perfect Anime Waifu!</strong><br>
+            This uses Japanese female voices to speak English text for authentic anime sound.
+        </div>
+        
+        <textarea id="testText" placeholder="Enter English text for Japanese waifu voice to speak...">Kyaa~ Hello big daddy! (*≧ω≦*) I'm your cute anime companion! How are you today, darling? (´∀｀)♡</textarea>
+        
+        <div class="controls">
+            <div>
+                <label><strong>Voice:</strong></label>
+                <select id="voiceSelect"></select>
+            </div>
+            <div>
+                <label><strong>Pitch: </strong><span id="pitchValue">1.1</span></label>
+                <input type="range" id="pitchSlider" min="0.5" max="2" step="0.1" value="1.1">
+            </div>
+            <div>
+                <label><strong>Rate: </strong><span id="rateValue">1.4</span></label>
+                <input type="range" id="rateSlider" min="0.5" max="2" step="0.1" value="1.4">
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <button class="big-button" onclick="speakWaifu()">🎵 Speak with Japanese Waifu Voice</button>
+            <button onclick="stopSpeaking()">🛑 Stop</button>
+        </div>
+
+        <h3>🎭 Try These Waifu Phrases:</h3>
+        <button onclick="speakPhrase('Kyaa~ Good morning big daddy! Did you sleep well?')">Morning</button>
+        <button onclick="speakPhrase('Ehehe~ Time for a break, darling!')">Break Time</button>
+        <button onclick="speakPhrase('Nya~ Don\'t forget to drink water, big daddy!')">Water Reminder</button>
+        <button onclick="speakPhrase('H-hmph! It\'s not like I missed you or anything... Welcome back, darling!')">Tsundere</button>
+
+        <h3>🌐 Test Backend API:</h3>
+        <button onclick="testBackendTTS()">Test Backend TTS</button>
+        
+        <div id="status" class="status">🎤 Ready to test Japanese anime waifu voice speaking English!</div>
+    </div>
+
+    <script>
+        let voices = [];
+
+        // Load voices and prioritize Japanese female voices
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+            const select = document.getElementById('voiceSelect');
+            select.innerHTML = '<option value="">Auto (Japanese Female)</option>';
+            
+            // Prioritize Japanese voices
+            const japaneseVoices = voices.filter(v => 
+                v.lang.includes('ja') || 
+                v.name.toLowerCase().includes('japan') ||
+                v.name.toLowerCase().includes('haruka') ||
+                v.name.toLowerCase().includes('kyoko')
+            );
+
+            // Add Japanese voices first with special marking
+            japaneseVoices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `🎌 ${voice.name} (${voice.lang}) - ANIME WAIFU`;
+                select.appendChild(option);
+            });
+
+            // Add separator
+            if (japaneseVoices.length > 0) {
+                const separator = document.createElement('option');
+                separator.disabled = true;
+                separator.textContent = '--- English Female Voices (Fallback) ---';
+                select.appendChild(separator);
+            }
+
+            // Add English female voices as fallback
+            const englishFemaleVoices = voices.filter(v => 
+                v.lang.startsWith('en') && 
+                (v.name.toLowerCase().includes('female') || 
+                 v.name.toLowerCase().includes('zira') ||
+                 v.name.toLowerCase().includes('samantha') ||
+                 v.name.toLowerCase().includes('karen'))
+            );
+
+            englishFemaleVoices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `👩 ${voice.name} (${voice.lang})`;
+                select.appendChild(option);
+            });
+
+            // Update status
+            const japCount = japaneseVoices.length;
+            const femaleCount = englishFemaleVoices.length;
+            document.getElementById('status').textContent = 
+                `🎤 Loaded ${japCount} Japanese voices, ${femaleCount} English female voices`;
+        }
+
+        // Setup sliders
+        document.getElementById('pitchSlider').oninput = function() {
+            document.getElementById('pitchValue').textContent = this.value;
+        };
+        document.getElementById('rateSlider').oninput = function() {
+            document.getElementById('rateValue').textContent = this.value;
+        };
+
+        // Speak with Japanese waifu voice (speaking English)
+        function speakWaifu() {
+            const text = document.getElementById('testText').value;
+            const pitch = parseFloat(document.getElementById('pitchSlider').value);
+            const rate = parseFloat(document.getElementById('rateSlider').value);
+            const voiceName = document.getElementById('voiceSelect').value;
+            
+            speakText(text, pitch, rate, voiceName);
+        }
+
+        function speakPhrase(phrase) {
+            document.getElementById('testText').value = phrase;
+            speakWaifu();
+        }
+
+        function speakText(text, pitch = 1.1, rate = 1.4, voiceName = '') {
+            speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.pitch = pitch;
+            utterance.rate = rate;
+            utterance.volume = 1.0;
+            utterance.lang = 'en-US'; // English content
+            
+            // Select voice
+            if (voiceName) {
+                const voice = voices.find(v => v.name === voiceName);
+                if (voice) {
+                    utterance.voice = voice;
+                    console.log(`Selected voice: ${voice.name} (${voice.lang})`);
+                }
+            } else {
+                // Auto-select Japanese voice first, then female English voice
+                let selectedVoice = voices.find(v => 
+                    v.lang.includes('ja') || 
+                    v.name.toLowerCase().includes('japan') ||
+                    v.name.toLowerCase().includes('haruka')
+                );
+                
+                if (!selectedVoice) {
+                    selectedVoice = voices.find(v => 
+                        v.lang.startsWith('en') && 
+                        v.name.toLowerCase().includes('female')
+                    );
+                }
+                
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                    console.log(`Auto-selected voice: ${selectedVoice.name} (${selectedVoice.lang})`);
+                }
+            }
+            
+            utterance.onstart = () => {
+                const voiceInfo = utterance.voice ? 
+                    `${utterance.voice.name} (${utterance.voice.lang})` : 'Default';
+                document.getElementById('status').textContent = 
+                    `🎵 Speaking with ${voiceInfo} - Pitch: ${pitch}, Rate: ${rate}`;
+            };
+            
+            utterance.onend = () => {
+                document.getElementById('status').textContent = '✅ Finished speaking! How did it sound?';
+            };
+            
+            utterance.onerror = (event) => {
+                document.getElementById('status').textContent = `❌ Speech error: ${event.error}`;
+            };
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        function stopSpeaking() {
+            speechSynthesis.cancel();
+            document.getElementById('status').textContent = '🛑 Stopped speaking';
+        }
+
+        async function testBackendTTS() {
+            const text = document.getElementById('testText').value;
+            
+            try {
+                document.getElementById('status').textContent = '🌐 Testing backend Japanese waifu TTS...';
+                
+                const response = await fetch('http://localhost:3001/api/tts/waifu-speak', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, provider: 'web' })
+                });
+                
+                const data = await response.json();
+                console.log('Backend response:', data);
+                
+                if (data.success && data.config) {
+                    speakText(text, data.config.pitch, data.config.rate);
+                    document.getElementById('status').textContent = 
+                        `✅ Backend OK! Japanese waifu voice - Pitch: ${data.config.pitch}, Rate: ${data.config.rate}`;
+                } else {
+                    document.getElementById('status').textContent = '❌ Backend error - check console for details';
+                }
+            } catch (error) {
+                console.error('Backend error:', error);
+                document.getElementById('status').textContent = 
+                    '❌ Can\'t connect to backend. Make sure server is running on port 3001!';
+            }
+        }
+
+        // Initialize
+        window.onload = function() {
+            loadVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+            }
+            
+            // Show available voices info
+            setTimeout(() => {
+                console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
+            }, 1000);
+        };
+    </script>
+</body>
+</html> 
