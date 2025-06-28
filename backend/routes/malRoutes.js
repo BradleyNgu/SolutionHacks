@@ -548,4 +548,254 @@ router.post('/waifu/search', async (req, res) => {
     }
 });
 
+// Waifu add anime to list
+router.post('/waifu/add', async (req, res) => {
+    try {
+        const { animeName, status = 'plan_to_watch', originalText } = req.body;
+        
+        if (!animeName) {
+            return res.json({
+                success: true,
+                response: "Kyaa~ Which anime do you want me to add, big daddy? I need to know the name! (>.<)"
+            });
+        }
+
+        const userId = 'default';
+        const userToken = userTokens.get(userId);
+        
+        if (!userToken || Date.now() > userToken.expiresAt) {
+            return res.json({
+                success: true,
+                response: "I'd love to add anime to your list, big daddy, but you need to connect MyAnimeList first! (´∀｀)♡"
+            });
+        }
+
+        // First search for the anime
+        const searchResult = await malService.searchAnime(animeName, userToken.accessToken, 3);
+        
+        if (!searchResult.success || searchResult.anime.length === 0) {
+            return res.json({
+                success: true,
+                response: `Ehehe~ I couldn't find an anime called "${animeName}", big daddy! (>.<) Could you check the spelling or try a different name? ✨`
+            });
+        }
+
+        // Take the first/best match
+        const anime = searchResult.anime[0];
+        
+        // Add to list
+        const updateResult = await malService.updateAnimeStatus(
+            anime.id,
+            userToken.accessToken,
+            { status: status }
+        );
+
+        if (updateResult.success) {
+            return res.json({
+                success: true,
+                response: `Kyaa~ I've added "${anime.title}" to your ${status.replace('_', ' ')} list, big daddy! (*≧ω≦*) It looks amazing! ✨`
+            });
+        } else {
+            return res.json({
+                success: true,
+                response: `Oh no! I had trouble adding "${anime.title}" to your list, big daddy! (>.<) Maybe it's already there? Try checking your list! 💕`
+            });
+        }
+    } catch (error) {
+        console.error('Waifu Add Error:', error);
+        res.json({
+            success: true,
+            response: "Kyaa~ Something went wrong while adding the anime, big daddy! (>.<) Please try again! ✨"
+        });
+    }
+});
+
+// Waifu update anime status
+router.post('/waifu/update', async (req, res) => {
+    try {
+        const { animeName, status, originalText } = req.body;
+        
+        if (!animeName) {
+            return res.json({
+                success: true,
+                response: "Which anime status do you want me to update, big daddy? I need the anime name! (>.<)"
+            });
+        }
+
+        const userId = 'default';
+        const userToken = userTokens.get(userId);
+        
+        if (!userToken || Date.now() > userToken.expiresAt) {
+            return res.json({
+                success: true,
+                response: "I want to update your anime list, big daddy, but you need to connect MyAnimeList first! (´∀｀)♡"
+            });
+        }
+
+        // Search for the anime
+        const searchResult = await malService.searchAnime(animeName, userToken.accessToken, 3);
+        
+        if (!searchResult.success || searchResult.anime.length === 0) {
+            return res.json({
+                success: true,
+                response: `Hmm~ I couldn't find "${animeName}" in the database, big daddy! (>.<) Could you double-check the name? ✨`
+            });
+        }
+
+        const anime = searchResult.anime[0];
+        
+        // Update status
+        const updateResult = await malService.updateAnimeStatus(
+            anime.id,
+            userToken.accessToken,
+            { status: status }
+        );
+
+        if (updateResult.success) {
+            const statusText = status.replace('_', ' ');
+            return res.json({
+                success: true,
+                response: `Yay! I've marked "${anime.title}" as ${statusText}, big daddy! (*≧ω≦*) ${status === 'completed' ? 'How did you like it?' : 'Enjoy watching!'} 💕`
+            });
+        } else {
+            return res.json({
+                success: true,
+                response: `Ehehe~ I had trouble updating "${anime.title}", big daddy! (>.<) Maybe try again? 💕`
+            });
+        }
+    } catch (error) {
+        console.error('Waifu Update Error:', error);
+        res.json({
+            success: true,
+            response: "Something went wrong while updating the anime, big daddy! (>.<) Please try again! ✨"
+        });
+    }
+});
+
+// Waifu rate anime
+router.post('/waifu/rate', async (req, res) => {
+    try {
+        const { animeName, score, originalText } = req.body;
+        
+        if (!animeName || !score) {
+            return res.json({
+                success: true,
+                response: "I need both the anime name and your score (1-10) to rate it, big daddy! (>.<) What did you think of it? ✨"
+            });
+        }
+
+        const userId = 'default';
+        const userToken = userTokens.get(userId);
+        
+        if (!userToken || Date.now() > userToken.expiresAt) {
+            return res.json({
+                success: true,
+                response: "I want to rate anime with you, big daddy, but you need to connect MyAnimeList first! (´∀｀)♡"
+            });
+        }
+
+        // Search for the anime
+        const searchResult = await malService.searchAnime(animeName, userToken.accessToken, 3);
+        
+        if (!searchResult.success || searchResult.anime.length === 0) {
+            return res.json({
+                success: true,
+                response: `I couldn't find "${animeName}" to rate it, big daddy! (>.<) Could you check the spelling? ✨`
+            });
+        }
+
+        const anime = searchResult.anime[0];
+        
+        // Update with score
+        const updateResult = await malService.updateAnimeStatus(
+            anime.id,
+            userToken.accessToken,
+            { score: score }
+        );
+
+        if (updateResult.success) {
+            let reaction = '';
+            if (score >= 9) reaction = 'Kyaa~ Amazing choice, big daddy! (*≧ω≦*)';
+            else if (score >= 7) reaction = 'Great taste, big daddy! (´∀｀)♡';
+            else if (score >= 5) reaction = 'That\'s fair, big daddy! Not every anime is perfect~ (´∀｀)';
+            else reaction = 'Aww, you didn\'t like it much, big daddy? (>.<)';
+            
+            return res.json({
+                success: true,
+                response: `${reaction} I've given "${anime.title}" a score of ${score}/10 on your list! ✨`
+            });
+        } else {
+            return res.json({
+                success: true,
+                response: `Ehehe~ I had trouble rating "${anime.title}", big daddy! (>.<) Maybe try again? 💕`
+            });
+        }
+    } catch (error) {
+        console.error('Waifu Rate Error:', error);
+        res.json({
+            success: true,
+            response: "Something went wrong while rating the anime, big daddy! (>.<) Please try again! ✨"
+        });
+    }
+});
+
+// Waifu seasonal anime
+router.get('/waifu/seasonal', async (req, res) => {
+    try {
+        const userId = 'default';
+        const userToken = userTokens.get(userId);
+        
+        if (!userToken || Date.now() > userToken.expiresAt) {
+            return res.json({
+                success: true,
+                response: "I want to show you seasonal anime, big daddy, but you need to connect MyAnimeList first! (´∀｀)♡"
+            });
+        }
+
+        // Get current season
+        const now = new Date();
+        const year = now.getFullYear();
+        let season = 'winter';
+        const month = now.getMonth() + 1;
+        
+        if (month >= 3 && month <= 5) season = 'spring';
+        else if (month >= 6 && month <= 8) season = 'summer';
+        else if (month >= 9 && month <= 11) season = 'fall';
+
+        const seasonalResult = await malService.getSeasonalAnime(year, season, userToken.accessToken, 6);
+        
+        if (!seasonalResult.success || seasonalResult.anime.length === 0) {
+            return res.json({
+                success: true,
+                response: `Kyaa~ I'm having trouble getting seasonal anime right now, big daddy! (>.<) Maybe try again later? ✨`
+            });
+        }
+
+        let waifuResponse = `Kyaa~ Here are the hot anime from ${season} ${year}, big daddy! (*≧ω≦*)\n\n`;
+        
+        seasonalResult.anime.slice(0, 5).forEach((anime, index) => {
+            waifuResponse += `${index + 1}. **${anime.title}**\n`;
+            if (anime.score) waifuResponse += `   ⭐ Score: ${anime.score}/10\n`;
+            if (anime.genres.length > 0) waifuResponse += `   🏷️ ${anime.genres.slice(0, 3).join(', ')}\n`;
+            waifuResponse += '\n';
+        });
+        
+        waifuResponse += `Want me to add any of these to your list, big daddy? Just ask! (´∀｀)♡`;
+        
+        res.json({
+            success: true,
+            response: waifuResponse,
+            season: season,
+            year: year,
+            animeList: seasonalResult.anime
+        });
+    } catch (error) {
+        console.error('Waifu Seasonal Error:', error);
+        res.json({
+            success: true,
+            response: "Something went wrong getting seasonal anime, big daddy! (>.<) Please try again! ✨"
+        });
+    }
+});
+
 module.exports = router; 

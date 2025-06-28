@@ -313,6 +313,220 @@
             }
         }
 
+        // Smart anime command handler
+        async function handleAnimeCommand(text) {
+            const lowerText = text.toLowerCase();
+            
+            try {
+                // Show anime list
+                if (lowerText.includes('show') && (lowerText.includes('list') || lowerText.includes('my anime'))) {
+                    return await fetch('http://localhost:3001/api/mal/waifu/list-summary');
+                }
+                
+                // Get recommendations
+                if (lowerText.includes('recommend') || lowerText.includes('suggest')) {
+                    return await fetch('http://localhost:3001/api/mal/waifu/recommend', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ preferences: text })
+                    });
+                }
+                
+                // Add anime to list
+                if ((lowerText.includes('add') || lowerText.includes('put')) && 
+                    (lowerText.includes('list') || lowerText.includes('watch'))) {
+                    return await handleAddAnime(text);
+                }
+                
+                // Update anime status
+                if (lowerText.includes('mark') || lowerText.includes('set') || 
+                    lowerText.includes('completed') || lowerText.includes('watching') || 
+                    lowerText.includes('dropped') || lowerText.includes('finished')) {
+                    return await handleUpdateStatus(text);
+                }
+                
+                // Rate anime
+                if ((lowerText.includes('rate') || lowerText.includes('score') || lowerText.includes('give')) && 
+                    (lowerText.match(/\d+/) || lowerText.includes('ten') || lowerText.includes('nine'))) {
+                    return await handleRateAnime(text);
+                }
+                
+                // Search anime
+                if (lowerText.includes('search') || lowerText.includes('find') || lowerText.includes('look for')) {
+                    return await handleSearchAnime(text);
+                }
+                
+                // Seasonal/popular anime
+                if (lowerText.includes('season') || lowerText.includes('popular') || lowerText.includes('trending')) {
+                    return await fetch('http://localhost:3001/api/mal/waifu/seasonal');
+                }
+                
+                // Default: Let waifu handle with anime context
+                return await fetch('http://localhost:3001/api/gemini/waifu', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        prompt: text + " (Context: User has MyAnimeList connected and may want anime help)"
+                    })
+                });
+                
+            } catch (error) {
+                console.error('Anime command error:', error);
+                throw error;
+            }
+        }
+        
+        // Handle adding anime to list
+        async function handleAddAnime(text) {
+            // Extract anime name from the text
+            const animeName = extractAnimeName(text, ['add', 'put', 'to my', 'list', 'watch']);
+            
+            if (!animeName) {
+                return await fetch('http://localhost:3001/api/gemini/waifu', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        prompt: "User wants to add anime to their list but I couldn't understand which anime. Ask them to be more specific."
+                    })
+                });
+            }
+            
+            // Search and add anime
+            return await fetch('http://localhost:3001/api/mal/waifu/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    animeName: animeName,
+                    status: 'plan_to_watch',
+                    originalText: text
+                })
+            });
+        }
+        
+        // Handle updating anime status
+        async function handleUpdateStatus(text) {
+            const animeName = extractAnimeName(text, ['mark', 'set', 'completed', 'watching', 'dropped', 'finished', 'as']);
+            
+            let status = 'watching';
+            if (text.toLowerCase().includes('completed') || text.toLowerCase().includes('finished')) {
+                status = 'completed';
+            } else if (text.toLowerCase().includes('dropped')) {
+                status = 'dropped';
+            } else if (text.toLowerCase().includes('hold') || text.toLowerCase().includes('pause')) {
+                status = 'on_hold';
+            } else if (text.toLowerCase().includes('plan') || text.toLowerCase().includes('want')) {
+                status = 'plan_to_watch';
+            }
+            
+            if (!animeName) {
+                return await fetch('http://localhost:3001/api/gemini/waifu', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        prompt: "User wants to update anime status but I couldn't understand which anime. Ask them to be more specific."
+                    })
+                });
+            }
+            
+            return await fetch('http://localhost:3001/api/mal/waifu/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    animeName: animeName,
+                    status: status,
+                    originalText: text
+                })
+            });
+        }
+        
+        // Handle rating anime
+        async function handleRateAnime(text) {
+            const animeName = extractAnimeName(text, ['rate', 'give', 'score', 'out of']);
+            
+            // Extract score
+            let score = null;
+            const numberMatch = text.match(/(\d+)/);
+            if (numberMatch) {
+                score = parseInt(numberMatch[1]);
+                if (score > 10) score = 10;
+                if (score < 1) score = 1;
+            } else {
+                // Handle word numbers
+                const wordNumbers = {
+                    'ten': 10, 'nine': 9, 'eight': 8, 'seven': 7, 'six': 6,
+                    'five': 5, 'four': 4, 'three': 3, 'two': 2, 'one': 1
+                };
+                for (const [word, num] of Object.entries(wordNumbers)) {
+                    if (text.toLowerCase().includes(word)) {
+                        score = num;
+                        break;
+                    }
+                }
+            }
+            
+            if (!animeName || !score) {
+                return await fetch('http://localhost:3001/api/gemini/waifu', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        prompt: "User wants to rate anime but I need both anime name and score (1-10). Ask them to clarify."
+                    })
+                });
+            }
+            
+            return await fetch('http://localhost:3001/api/mal/waifu/rate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    animeName: animeName,
+                    score: score,
+                    originalText: text
+                })
+            });
+        }
+        
+        // Handle searching anime
+        async function handleSearchAnime(text) {
+            const searchTerm = extractAnimeName(text, ['search', 'find', 'look for', 'about']);
+            
+            if (!searchTerm) {
+                return await fetch('http://localhost:3001/api/gemini/waifu', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        prompt: "User wants to search for anime but didn't specify what to search for. Ask them what anime they're looking for."
+                    })
+                });
+            }
+            
+            return await fetch('http://localhost:3001/api/mal/waifu/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    query: searchTerm,
+                    originalText: text
+                })
+            });
+        }
+        
+        // Extract anime name from text by removing command words
+        function extractAnimeName(text, commandWords) {
+            let cleanText = text.toLowerCase();
+            
+            // Remove command words
+            commandWords.forEach(word => {
+                cleanText = cleanText.replace(new RegExp(`\\b${word}\\b`, 'gi'), '');
+            });
+            
+            // Clean up extra spaces and common words
+            cleanText = cleanText
+                .replace(/\b(to|my|anime|the|a|an)\b/gi, '')
+                .trim()
+                .replace(/\s+/g, ' ');
+            
+            return cleanText || null;
+        }
+
         async function processVoiceInput(text) {
             if (!text) return;
 
@@ -330,23 +544,8 @@
                 let response;
                 
                 if (isAnimeRequest && malConnected) {
-                    // Try to handle anime-specific requests
-                    if (text.toLowerCase().includes('list') || text.toLowerCase().includes('my anime')) {
-                        response = await fetch('http://localhost:3001/api/mal/waifu/list-summary');
-                    } else if (text.toLowerCase().includes('recommend')) {
-                        response = await fetch('http://localhost:3001/api/mal/waifu/recommend', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ preferences: text })
-                        });
-                    } else {
-                        // Regular waifu response with anime context
-                        response = await fetch('http://localhost:3001/api/gemini/waifu', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ prompt: text })
-                        });
-                    }
+                    // Handle anime list management commands
+                    response = await handleAnimeCommand(text);
                 } else {
                     // Regular waifu chat
                     response = await fetch('http://localhost:3001/api/gemini/waifu', {
