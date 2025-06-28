@@ -1,0 +1,26 @@
+body {
+  margin: 0;
+  background-color: transparent;
+  overflow: hidden;
+}
+
+#mascot-container {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+#maid {
+  width: 300px;
+}
+
+#speech-bubble {
+  background: white;
+  border-radius: 12px;
+  padding: 10px;
+  font-family: sans-serif;
+  position: absolute;
+  top: -60px;
+  right: 20px;
+  box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+}
