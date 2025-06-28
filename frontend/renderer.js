@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron');
+require('dotenv').config();
 
 const speechBubble = document.getElementById('speech-bubble');
 const maidImg = document.getElementById('maid');
