@@ -1,4 +1,5 @@
-const { app, Tray, BrowserWindow, Menu, ipcMain, screen } = require('electron');
+const { app, Tray, BrowserWindow, Menu, ipcMain, screen, shell } = require('electron');
+const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
 const speech = require('@google-cloud/speech');
@@ -21,10 +22,11 @@ function createWindow() {
     resizable: false,
     alwaysOnTop: true,
     transparent: true,
-    focusable: false,
+    focusable: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),nodeIntegration: true,
-      contextIsolation: false,
+      contextIsolation: true,
+      nodeIntegration: false,
       media: true
     }
   });
@@ -93,6 +95,24 @@ function createTray() {
       }
     },
     { label: 'Mute', click: () => {} },
+    {
+      label: 'Connect MyAnimeList',
+      click: async () => {
+        try {
+          // Call your local backend endpoint to get the auth URL
+          const response = await axios.get('http://localhost:3001/api/mal/auth');
+          
+          if (response.data && response.data.authURL) {
+            // Open the URL in the user's default browser
+            shell.openExternal(response.data.authURL);
+          } else {
+            console.error('Invalid auth response:', response.data);
+          }
+        } catch (err) {
+          console.error('Failed to get MAL auth URL:', err);
+        }
+      }
+    },
     {
       label: 'Quit',
       click: () => {
