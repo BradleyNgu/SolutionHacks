@@ -1,16 +1,24 @@
 {
   "name": "solutionhacks",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A backend service for TTS and Gemini AI integration",
+  "main": "backend/server.js",
   "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/BradleyNgu/SolutionHacks.git"
   },
-  "keywords": [],
+  "keywords": [
+    "tts",
+    "text-to-speech",
+    "gemini",
+    "ai",
+    "backend"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
@@ -19,9 +27,14 @@
   },
   "homepage": "https://github.com/BradleyNgu/SolutionHacks#readme",
   "devDependencies": {
-    "electron": "^37.1.0"
+    "electron": "^37.1.0",
+    "nodemon": "^3.1.10"
   },
   "dependencies": {
-    "@google/genai": "^1.7.0"
+    "@google-cloud/text-to-speech": "^5.8.1",
+    "@google/genai": "^1.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2"
   }
 }
