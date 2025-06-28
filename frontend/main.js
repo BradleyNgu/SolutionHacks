@@ -1,10 +1,16 @@
-const { app, Tray, BrowserWindow, Menu, ipcMain} = require('electron');
+const { app, Tray, BrowserWindow, Menu, ipcMain, screen } = require('electron');
 const path = require('path');
+const fs = require('fs');
+const speech = require('@google-cloud/speech');
 
-  
+let mainWindow;
+let tray;
 
-function createWindow () {
-  const mainWindow = new BrowserWindow({
+//Set Google credentials
+process.env.GOOGLE_APPLICATION_CREDENTIALS = path.join(__dirname, 'google-credentials.json');
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
     width: 400,
     height: 600,
     frame: false,
@@ -14,92 +20,92 @@ function createWindow () {
     transparent: true,
     focusable: false,
     webPreferences: {
-      
+      nodeIntegration: true,
+      contextIsolation: false,
+      media: true
     }
   });
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
-// bounce around
-const { screen } = require('electron');
+  const windowWidth = 400;
+  const windowHeight = 600;
+  let moving = false;
 
-const windowWidth = 800;
-const windowHeight = 600;
+  function moveSmoothlyTo(xTarget, yTarget, speed = 5, callback) {
+    const { x: startX, y: startY } = mainWindow.getBounds();
+    const dx = xTarget - startX;
+    const dy = yTarget - startY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const steps = Math.max(1, Math.floor(distance / speed));
+    let step = 0;
 
-let moving = false;
+    const interval = setInterval(() => {
+      step++;
+      const progress = step / steps;
+      const newX = Math.round(startX + dx * progress);
+      const newY = Math.round(startY + dy * progress);
+      mainWindow.setBounds({ x: newX, y: newY, width: windowWidth, height: windowHeight });
 
-function moveSmoothlyTo(xTarget, yTarget, speed = 5, callback) {
-  const { x: startX, y: startY } = mainWindow.getBounds();
-  let x = startX;
-  let y = startY;
+      if (step >= steps) {
+        clearInterval(interval);
+        if (callback) callback();
+      }
+    }, 16);
+  }
 
-  const dx = xTarget - x;
-  const dy = yTarget - y;
-  const distance = Math.sqrt(dx * dx + dy * dy);
-  const steps = Math.max(1, Math.floor(distance / speed));
+  function moveToRandomPoint() {
+    if (moving) return;
+    const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+    const maxX = screenWidth - windowWidth;
+    const maxY = screenHeight - windowHeight;
+    const targetX = Math.floor(Math.random() * maxX);
+    const targetY = Math.floor(Math.random() * maxY);
 
-  let step = 0;
+    moving = true;
+    moveSmoothlyTo(targetX, targetY, 10, () => {
+      moving = false;
+      const delay = Math.floor(Math.random() * 10000) + 10000;
+      setTimeout(moveToRandomPoint, delay);
+    });
+  }
 
-  const interval = setInterval(() => {
-    step++;
+  moveToRandomPoint();
 
-    const progress = step / steps;
-    const newX = Math.round(startX + dx * progress);
-    const newY = Math.round(startY + dy * progress);
-
-    mainWindow.setBounds({ x: newX, y: newY, width: windowWidth, height: windowHeight });
-
-    if (step >= steps) {
-      clearInterval(interval);
-      if (callback) callback();
-    }
-  }, 16); // ~60fps
-}
-
-function moveToRandomPoint() {
-  if (moving) return;
-
-  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
-
-  const maxX = screenWidth - windowWidth;
-  const maxY = screenHeight - windowHeight;
-
-  const targetX = Math.floor(Math.random() * maxX);
-  const targetY = Math.floor(Math.random() * maxY);
-
-  moving = true;
-  moveSmoothlyTo(targetX, targetY, 10, () => {
-    moving = false;
-    const delay = Math.floor(Math.random() * 10000)+10000; // moves every 10-20 seconds
-    setTimeout(moveToRandomPoint, delay);
+  ipcMain.on('trigger-move', () => {
+    moveToRandomPoint();
   });
 }
 
-// Start the loop
-moveToRandomPoint();
-
-ipcMain.on('trigger-move', () => {
-  moveToRandomPoint();
-});
-
-}
-
-function createTray(){
+function createTray() {
   tray = new Tray(path.join(__dirname, 'icon.png'));
-  const contextMenu = Menu.buildFromTemplate([
-    {label: 'Quit', click: () => { app.isQuiting = true; app.quit();}},
-    {label: 'Mute', click: () => {}}
-    
-     
-  ]);
-  
-  tray.setToolTip('My App');
-  tray.setContextMenu(contextMenu);
 
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Talk to Maid',
+      click: () => {
+        if (mainWindow) {
+          mainWindow.webContents.send('trigger-voice-recording');
+        }
+      }
+    },
+    { label: 'Mute', click: () => {} },
+    {
+      label: 'Quit',
+      click: () => {
+        app.isQuiting = true;
+        app.quit();
+      }
+    }
+  ]);
+
+  tray.setToolTip('AniMaid');
+  tray.setContextMenu(contextMenu);
   tray.on('double-click', () => {
     mainWindow.show();
   });
 }
+
 app.whenReady().then(() => {
   createWindow();
   createTray();
@@ -107,4 +113,30 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
+});
+
+
+
+const client = new speech.SpeechClient();
+
+ipcMain.handle('transcribe-buffer', async (event, base64Audio) => {
+  try {
+    const audio = { content: base64Audio };
+    const config = {
+      encoding: 'LINEAR16',
+      sampleRateHertz: 16000,
+      languageCode: 'en-US',
+    };
+
+    const request = { audio, config };
+    const [response] = await client.recognize(request);
+    const transcription = response.results
+      .map(result => result.alternatives[0]?.transcript)
+      .join('\n');
+
+    return transcription || "❌ No speech detected.";
+  } catch (err) {
+    console.error("🛑 Google Speech API error:", err);
+    return "❌ Speech recognition failed.";
+  }
 });
