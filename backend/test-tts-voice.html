@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 Waifu Voice Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+        }
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        h1 { color: #e91e63; text-align: center; }
+        button {
+            background: #e91e63;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #c2185b; }
+        .big-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Anime Waifu Voice Tester</h1>
+        
+        <textarea id="testText" placeholder="Enter text for waifu to speak...">Kyaa~ Hello big daddy! (*≧ω≦*) I'm your cute anime companion! How are you today, darling? (´∀｀)♡</textarea>
+        
+        <div class="controls">
+            <div>
+                <label><strong>Voice:</strong></label>
+                <select id="voiceSelect"></select>
+            </div>
+            <div>
+                <label><strong>Pitch: </strong><span id="pitchValue">1.8</span></label>
+                <input type="range" id="pitchSlider" min="0.5" max="2" step="0.1" value="1.8">
+            </div>
+            <div>
+                <label><strong>Rate: </strong><span id="rateValue">1.1</span></label>
+                <input type="range" id="rateSlider" min="0.5" max="2" step="0.1" value="1.1">
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <button class="big-button" onclick="speakWaifu()">🎵 Speak with Waifu Voice</button>
+            <button onclick="stopSpeaking()">🛑 Stop</button>
+        </div>
+
+        <h3>🎭 Try These Waifu Phrases:</h3>
+        <button onclick="speakPhrase('Kyaa~ Good morning big daddy! Did you sleep well?')">Morning</button>
+        <button onclick="speakPhrase('Ehehe~ Time for a break, darling!')">Break Time</button>
+        <button onclick="speakPhrase('Nya~ Don\'t forget to drink water, big daddy!')">Water Reminder</button>
+        <button onclick="speakPhrase('H-hmph! Welcome back, darling!')">Tsundere</button>
+
+        <h3>🌐 Test Backend API:</h3>
+        <button onclick="testBackendTTS()">Test Backend TTS</button>
+        
+        <div id="status" class="status">🎤 Ready to test anime waifu voice!</div>
+    </div>
+
+    <script>
+        let voices = [];
+
+        // Load voices
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+            const select = document.getElementById('voiceSelect');
+            select.innerHTML = '<option value="">Auto (Female)</option>';
+            
+            voices.filter(v => v.lang.startsWith('en')).forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                const isFemale = voice.name.toLowerCase().includes('female') || 
+                                voice.name.toLowerCase().includes('zira') ||
+                                voice.name.toLowerCase().includes('samantha');
+                option.textContent = `${voice.name} ${isFemale ? '👩' : ''}`;
+                select.appendChild(option);
+            });
+        }
+
+        // Setup sliders
+        document.getElementById('pitchSlider').oninput = function() {
+            document.getElementById('pitchValue').textContent = this.value;
+        };
+        document.getElementById('rateSlider').oninput = function() {
+            document.getElementById('rateValue').textContent = this.value;
+        };
+
+        // Speak with waifu voice
+        function speakWaifu() {
+            const text = document.getElementById('testText').value;
+            const pitch = parseFloat(document.getElementById('pitchSlider').value);
+            const rate = parseFloat(document.getElementById('rateSlider').value);
+            const voiceName = document.getElementById('voiceSelect').value;
+            
+            speakText(text, pitch, rate, voiceName);
+        }
+
+        function speakPhrase(phrase) {
+            document.getElementById('testText').value = phrase;
+            speakWaifu();
+        }
+
+        function speakText(text, pitch = 1.8, rate = 1.1, voiceName = '') {
+            speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.pitch = pitch;
+            utterance.rate = rate;
+            utterance.volume = 1.0;
+            
+            // Select voice
+            if (voiceName) {
+                const voice = voices.find(v => v.name === voiceName);
+                if (voice) utterance.voice = voice;
+            } else {
+                // Auto-select female voice
+                const femaleVoice = voices.find(v => 
+                    v.lang.startsWith('en') && 
+                    v.name.toLowerCase().includes('female')
+                );
+                if (femaleVoice) utterance.voice = femaleVoice;
+            }
+            
+            utterance.onstart = () => {
+                document.getElementById('status').textContent = 
+                    `🎵 Speaking: "${text.substring(0, 40)}..." with pitch ${pitch}, rate ${rate}`;
+            };
+            
+            utterance.onend = () => {
+                document.getElementById('status').textContent = '✅ Finished speaking!';
+            };
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        function stopSpeaking() {
+            speechSynthesis.cancel();
+            document.getElementById('status').textContent = '🛑 Stopped speaking';
+        }
+
+        async function testBackendTTS() {
+            const text = document.getElementById('testText').value;
+            
+            try {
+                document.getElementById('status').textContent = '🌐 Testing backend...';
+                
+                const response = await fetch('http://localhost:3001/api/tts/waifu-speak', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, provider: 'web' })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.config) {
+                    speakText(text, data.config.pitch, data.config.rate);
+                    document.getElementById('status').textContent = 
+                        `✅ Backend OK! Using pitch ${data.config.pitch}, rate ${data.config.rate}`;
+                } else {
+                    document.getElementById('status').textContent = '❌ Backend error';
+                }
+            } catch (error) {
+                document.getElementById('status').textContent = 
+                    '❌ Can\'t connect to backend. Make sure server is running on port 3001!';
+            }
+        }
+
+        // Initialize
+        window.onload = function() {
+            loadVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        };
+    </script>
+</body>
+</html> 
