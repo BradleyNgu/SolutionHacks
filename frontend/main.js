@@ -1,25 +1,46 @@
-const { app, BrowserWindow } = require('electron');
+const { app, Tray, BrowserWindow, Menu } = require('electron');
 const path = require('path');
+
+  
 
 function createWindow () {
   const mainWindow = new BrowserWindow({
-    width: 800,
+    width: 400,
     height: 600,
+    frame: false,
+    skipTaskbar: true,
+    resizable: false,
+    alwaysOnTop: true,
     transparent: true,
     webPreferences: {
-      contextIsolation: true
+      preload: path.join(__dirname, 'preload.js'),
     }
   });
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 }
+function createTray(){
+  tray = new Tray(path.join(__dirname, 'icon.png'));
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Quit',
+      click: () => {
+        app.isQuiting = true;
+        app.quit();
+      }
+    }
+  ]);
+  
+  tray.setToolTip('My App');
+  tray.setContextMenu(contextMenu);
 
+  tray.on('double-click', () => {
+    mainWindow.show();
+  });
+}
 app.whenReady().then(() => {
   createWindow();
-
-  app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
+  createTray();
 });
 
 app.on('window-all-closed', function () {
