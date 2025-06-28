@@ -1,4 +1,4 @@
-const { app, Tray, BrowserWindow, Menu} = require('electron');
+const { app, Tray, BrowserWindow, Menu, ipcMain} = require('electron');
 const path = require('path');
 
   
@@ -77,6 +77,11 @@ function moveToRandomPoint() {
 
 // Start the loop
 moveToRandomPoint();
+
+ipcMain.on('trigger-move', () => {
+  moveToRandomPoint();
+});
+
 }
 
 function createTray(){
