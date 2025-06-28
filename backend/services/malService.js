@@ -26,14 +26,11 @@ class MALService {
         return base64url;
     }
 
-    // Generate code challenge for PKCE (SHA256 hash of code_verifier, base64url encoded)
+    // Generate code challenge for PKCE (MyAnimeList only supports 'plain' method)
     generateCodeChallenge(codeVerifier) {
-        // Explicitly specify UTF-8 encoding for the code_verifier
-        const hash = crypto.createHash('sha256').update(codeVerifier, 'utf8').digest('base64');
-        return hash
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=/g, '');
+        // For MyAnimeList, code_challenge = code_verifier (plain method)
+        // No SHA256 hashing needed - they must be identical
+        return codeVerifier;
     }
 
     // Generate OAuth authorization URL with PKCE

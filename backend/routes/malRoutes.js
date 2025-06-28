@@ -19,14 +19,13 @@ router.get('/auth', (req, res) => {
         const codeVerifier = malService.generateCodeVerifier();
         const codeChallenge = malService.generateCodeChallenge(codeVerifier);
         
-        console.log('Generated PKCE parameters:', {
+        console.log('Generated PKCE parameters (PLAIN method):', {
             state,
             codeVerifier_length: codeVerifier.length,
             codeChallenge_length: codeChallenge.length,
+            verifier_equals_challenge: codeVerifier === codeChallenge,
             codeVerifier_sample: codeVerifier.substring(0, 10) + '...',
-            codeChallenge_sample: codeChallenge.substring(0, 10) + '...',
-            codeVerifier_full: codeVerifier, // Full verifier for debugging
-            codeChallenge_full: codeChallenge // Full challenge for debugging
+            codeChallenge_sample: codeChallenge.substring(0, 10) + '...'
         });
         
         // Store code verifier for this user/state
@@ -39,7 +38,7 @@ router.get('/auth', (req, res) => {
             scope: 'write:users',
             state: state,
             code_challenge: codeChallenge,
-            code_challenge_method: 'S256'
+            code_challenge_method: 'plain'
         });
         
         const authURL = `https://myanimelist.net/v1/oauth2/authorize?${params.toString()}`;
@@ -152,17 +151,16 @@ async function exchangeCodeForToken(authorizationCode, codeVerifier) {
             code_verifier: codeVerifier
         };
 
-        // Include client_secret if available
+        // Include client_secret if available (Scheme 2 from MAL docs)
         if (process.env.MAL_CLIENT_SECRET) {
             requestBody.client_secret = process.env.MAL_CLIENT_SECRET;
         }
 
-        console.log('Token exchange request:', {
+        console.log('Token exchange request (PLAIN method):', {
             grant_type: requestBody.grant_type,
             redirect_uri: requestBody.redirect_uri,
             client_id: requestBody.client_id,
             code_verifier_length: codeVerifier.length,
-            code_verifier_full: codeVerifier, // Full verifier for debugging
             has_client_secret: !!requestBody.client_secret
         });
 
