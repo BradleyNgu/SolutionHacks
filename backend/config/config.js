@@ -29,30 +29,43 @@ Remember to always respond in character as a devoted anime waifu companion!`
     gcpProjectId: process.env.GCP_PROJECT_ID,
     gcpKeyFilename: process.env.GCP_KEY_FILENAME,
     
-    // Anime waifu voice settings - higher pitch, faster rate, more expressive
+    // Anime waifu voice settings - Japanese female voice speaking English
     defaultVoice: {
-      languageCode: 'en-US',
-      name: 'en-US-Neural2-F', // Female neural voice (more expressive)
+      languageCode: 'en-US', // English content but with Japanese voice
+      name: 'ja-JP-Standard-B', // Japanese female voice
       ssmlGender: 'FEMALE'
     },
     audioConfig: {
       audioEncoding: 'MP3',
-      speakingRate: 1.15, // Slightly faster for cute anime feel
-      pitch: 4.0, // Higher pitch for anime waifu voice
+      speakingRate: 1.4, // Slightly faster for energetic anime feel
+      pitch: 1.1, // High pitch for kawaii voice
       volumeGainDb: 0.0
     },
     // Waifu-specific voice options for different providers
     waifuVoiceSettings: {
       web: {
-        rate: 1.1,
-        pitch: 1.8, // Higher pitch for web speech API
+        rate: 1.4, // Good rate for English with Japanese accent
+        pitch: 1.1, // High pitch for anime waifu voice
         volume: 1.0,
-        preferredVoices: ['Google US English Female', 'Microsoft Zira', 'Samantha']
+        language: 'en-US', // English content
+        preferredVoices: [
+          'ja-JP-Standard-A', 
+          'ja-JP-Standard-B',
+          'Japanese (Japan)',
+          'Microsoft Haruka - Japanese (Japan)',
+          'Google Japanese Female',
+          'Kyoko',
+          // Fallback to English female voices if Japanese not available
+          'Google US English Female', 
+          'Microsoft Zira',
+          'Samantha'
+        ]
       },
       google: {
-        voiceNames: ['en-US-Neural2-F', 'en-US-Wavenet-F', 'en-US-Standard-C'],
-        speakingRate: 1.15,
-        pitch: 4.0
+        voiceNames: ['ja-JP-Standard-B', 'ja-JP-Standard-A', 'ja-JP-Wavenet-A', 'ja-JP-Neural2-B'],
+        languageCode: 'en-US', // English content with Japanese voice
+        speakingRate: 1.4,
+        pitch: 1.1
       }
     }
   },
