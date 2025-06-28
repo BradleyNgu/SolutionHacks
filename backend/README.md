@@ -72,7 +72,8 @@ Content-Type: application/json
   "prompt": "Your text prompt here",
   "options": {
     "temperature": 0.7,
-    "maxTokens": 2048
+    "maxTokens": 2048,
+    "enableThinking": false
   }
 }
 ```

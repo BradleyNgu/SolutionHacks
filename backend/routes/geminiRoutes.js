@@ -17,7 +17,8 @@ router.post('/generate', async (req, res) => {
       success: true,
       response,
       metadata: {
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
+        enableThinking: options.enableThinking || false,
         timestamp: new Date().toISOString()
       }
     });
@@ -45,7 +46,8 @@ router.post('/chat', async (req, res) => {
       success: true,
       response,
       metadata: {
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
+        enableThinking: options.enableThinking || false,
         timestamp: new Date().toISOString(),
         messageCount: messages.length
       }
@@ -71,7 +73,7 @@ router.post('/start-chat', async (req, res) => {
       message: 'Chat session started',
       sessionId: Date.now().toString(), // Simple session ID
       metadata: {
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         timestamp: new Date().toISOString()
       }
     });
@@ -102,7 +104,7 @@ router.post('/send-message', async (req, res) => {
       response,
       sessionId,
       metadata: {
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         timestamp: new Date().toISOString()
       }
     });

@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require('@google/genai');
+const { GoogleGenAI } = require('@google/genai');
 const config = require('../config/config');
 
 class GeminiService {
@@ -7,8 +7,9 @@ class GeminiService {
       throw new Error('Gemini API key is required. Please set GEMINI_API_KEY in your environment variables.');
     }
     
-    this.genAI = new GoogleGenerativeAI(config.gemini.apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: config.gemini.model });
+    // Set API key as environment variable for the client
+    process.env.GEMINI_API_KEY = config.gemini.apiKey;
+    this.ai = new GoogleGenAI({});
   }
 
   /**
@@ -19,21 +20,24 @@ class GeminiService {
    */
   async generateText(prompt, options = {}) {
     try {
-      const generationConfig = {
-        temperature: options.temperature || 0.7,
-        topP: options.topP || 0.8,
-        topK: options.topK || 40,
-        maxOutputTokens: options.maxTokens || 2048,
-        ...options.generationConfig
+      const requestConfig = {
+        model: config.gemini.model,
+        contents: prompt,
+        config: {
+          temperature: options.temperature || 0.7,
+          topP: options.topP || 0.8,
+          topK: options.topK || 40,
+          maxOutputTokens: options.maxTokens || 2048,
+          // Disable thinking by default for faster responses
+          thinkingConfig: {
+            thinkingBudget: options.enableThinking ? undefined : 0
+          },
+          ...options.config
+        }
       };
 
-      const result = await this.model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig
-      });
-
-      const response = await result.response;
-      return response.text();
+      const response = await this.ai.models.generateContent(requestConfig);
+      return response.text;
     } catch (error) {
       console.error('Gemini API error:', error);
       throw new Error(`Failed to generate text: ${error.message}`);
@@ -48,27 +52,29 @@ class GeminiService {
    */
   async generateWithHistory(messages, options = {}) {
     try {
-      const generationConfig = {
-        temperature: options.temperature || 0.7,
-        topP: options.topP || 0.8,
-        topK: options.topK || 40,
-        maxOutputTokens: options.maxTokens || 2048,
-        ...options.generationConfig
+      // Convert messages to a single prompt with context
+      const conversationText = messages
+        .map(msg => `${msg.role === 'assistant' ? 'Assistant' : 'User'}: ${msg.content}`)
+        .join('\n') + '\nAssistant:';
+
+      const requestConfig = {
+        model: config.gemini.model,
+        contents: conversationText,
+        config: {
+          temperature: options.temperature || 0.7,
+          topP: options.topP || 0.8,
+          topK: options.topK || 40,
+          maxOutputTokens: options.maxTokens || 2048,
+          // Disable thinking by default for faster responses
+          thinkingConfig: {
+            thinkingBudget: options.enableThinking ? undefined : 0
+          },
+          ...options.config
+        }
       };
 
-      // Convert messages to Gemini format
-      const contents = messages.map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
-      }));
-
-      const result = await this.model.generateContent({
-        contents,
-        generationConfig
-      });
-
-      const response = await result.response;
-      return response.text();
+      const response = await this.ai.models.generateContent(requestConfig);
+      return response.text;
     } catch (error) {
       console.error('Gemini API error:', error);
       throw new Error(`Failed to generate text with history: ${error.message}`);
@@ -76,24 +82,28 @@ class GeminiService {
   }
 
   /**
-   * Start a chat session with Gemini
+   * Start a chat session with Gemini (simplified for new API)
    * @param {Object} options - Chat options
-   * @returns {Object} - Chat session object
+   * @returns {Object} - Chat session configuration
    */
   startChat(options = {}) {
     try {
-      const generationConfig = {
-        temperature: options.temperature || 0.7,
-        topP: options.topP || 0.8,
-        topK: options.topK || 40,
-        maxOutputTokens: options.maxTokens || 2048,
-        ...options.generationConfig
-      };
-
-      return this.model.startChat({
-        generationConfig,
+      // Return a configuration object that can be used for chat
+      return {
+        sessionId: Date.now().toString(),
+        config: {
+          model: config.gemini.model,
+          temperature: options.temperature || 0.7,
+          topP: options.topP || 0.8,
+          topK: options.topK || 40,
+          maxOutputTokens: options.maxTokens || 2048,
+          thinkingConfig: {
+            thinkingBudget: options.enableThinking ? undefined : 0
+          },
+          ...options.config
+        },
         history: options.history || []
-      });
+      };
     } catch (error) {
       console.error('Failed to start chat session:', error);
       throw new Error(`Failed to start chat session: ${error.message}`);
