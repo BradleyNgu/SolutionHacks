@@ -20,5 +20,8 @@
   "homepage": "https://github.com/BradleyNgu/SolutionHacks#readme",
   "devDependencies": {
     "electron": "^37.1.0"
+  },
+  "dependencies": {
+    "@google/genai": "^1.7.0"
   }
 }
