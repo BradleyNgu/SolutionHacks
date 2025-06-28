@@ -1,4 +1,5 @@
 const { app, Tray, BrowserWindow, Menu, ipcMain, screen } = require('electron');
+require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
 const speech = require('@google-cloud/speech');
@@ -7,7 +8,7 @@ let mainWindow;
 let tray;
 
 //Set Google credentials
-process.env.GOOGLE_APPLICATION_CREDENTIALS = path.join(__dirname, 'google-credentials.json');
+process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, process.env.GOOGLE_APPLICATION_CREDENTIALS);
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
 });
