@@ -21,6 +21,16 @@ const ttsRoutes = require('./routes/ttsRoutes');
 app.use('/api/gemini', geminiRoutes);
 app.use('/api/tts', ttsRoutes);
 
+//redirect URL route
+app.get('/mal/callback', (req, res) => {
+  const code = req.query.code;
+  // TODO: exchange code for access token with MyAnimeList here
+  console.log('Received authorization code:', code);
+
+  // For now, just send a response so the browser doesn't hang
+  res.send('Authorization successful! You can close this window.');
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Server is running' });
