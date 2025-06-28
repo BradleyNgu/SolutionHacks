@@ -11,7 +11,7 @@ const idleLines = [
 const clickLines = [
   "Unhand me, swine!",
   "Hands off, trash!",
-  "Do I *look* like a toy to you?",
+  "Do I look like a toy to you?",
   "I didn’t give you permission to touch me!",
   "You absolute degenerate.",
   "Touch me again and I vanish.",
