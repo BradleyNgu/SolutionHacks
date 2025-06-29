@@ -2,14 +2,10 @@ const { app, Tray, BrowserWindow, Menu, ipcMain, screen, shell } = require('elec
 const axios = require('axios');
 require('dotenv').config();
 const path = require('path');
-const fs = require('fs');
-const speech = require('@google-cloud/speech');
 
 let mainWindow;
 let tray;
 
-//Set Google credentials
-process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, process.env.GOOGLE_APPLICATION_CREDENTIALS);
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
 });
@@ -25,10 +21,11 @@ function createWindow() {
     transparent: true,
     focusable: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),nodeIntegration: true,
-      contextIsolation: true,
-      nodeIntegration: false,
-      media: true
+        preload: path.join(__dirname, 'preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+        enableRemoteModule: false,
+        sandbox: false
     }
   });
 
@@ -137,30 +134,4 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
-});
-
-
-
-const client = new speech.SpeechClient();
-
-ipcMain.handle('transcribe-buffer', async (event, base64Audio) => {
-  try {
-    const audio = { content: base64Audio };
-    const config = {
-      encoding: 'LINEAR16',
-      sampleRateHertz: 16000,
-      languageCode: 'en-US',
-    };
-
-    const request = { audio, config };
-    const [response] = await client.recognize(request);
-    const transcription = response.results
-      .map(result => result.alternatives[0]?.transcript)
-      .join('\n');
-
-    return transcription || "❌ No speech detected.";
-  } catch (err) {
-    console.error("🛑 Google Speech API error:", err);
-    return "❌ Speech recognition failed.";
-  }
 });

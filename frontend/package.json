@@ -6,9 +6,7 @@
     "start": "electron ."
   },
   "dependencies": {
-    "@google-cloud/speech": "^7.1.0",
     "axios": "^1.10.0",
-    "dotenv": "^17.0.0",
     "dotenv": "^17.0.0",
     "electron": "^37.1.0"
   }
