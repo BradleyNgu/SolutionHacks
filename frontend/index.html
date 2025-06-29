@@ -13,6 +13,19 @@
 
   <div id="voice-bubble"></div>
   
+  <!-- Text Input Modal -->
+  <div id="text-input-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3>💬 Talk to your AI Maid</h3>
+      <textarea id="text-input-field" placeholder="Type your message here..." maxlength="500"></textarea>
+      <div class="modal-buttons">
+        <button id="send-text-btn" class="modal-btn primary">Send</button>
+        <button id="cancel-text-btn" class="modal-btn secondary">Cancel</button>
+      </div>
+      <div class="modal-hint">Speech recognition wasn't available, but text works great too!</div>
+    </div>
+  </div>
+  
   <!-- Test button for debugging -->
   <button id="test-speech" style="position: fixed; top: 10px; right: 10px; z-index: 10000; padding: 10px; background: red; color: white; border: none; border-radius: 5px; cursor: pointer;">Test Speech</button>
 

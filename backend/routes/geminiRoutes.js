@@ -42,9 +42,130 @@ router.post('/waifu', async (req, res) => {
       return res.status(400).json({ error: 'Prompt is required' });
     }
 
-    // Force waifu mode on
+    let enhancedPrompt = prompt;
+    let animeContext = null;
+    let malActionTaken = false;
+    let actionResponse = '';
+
+    // Check for MAL actions in the prompt
+    const addAnimePattern = /add\s+(.+?)\s+to\s+(my\s+)?list|put\s+(.+?)\s+(on|in)\s+(my\s+)?list|I\s+want\s+to\s+watch\s+(.+)/i;
+    const updateStatusPattern = /(finished|completed|watching|dropped)\s+(.+)|(.+)\s+(finished|completed|done)/i;
+
+    try {
+      // Get MAL tokens from malRoutes module
+      let malTokens = null;
+      try {
+        const malRoutes = require('./malRoutes');
+        malTokens = malRoutes.getUserTokens('default');
+      } catch (error) {
+        console.log('Could not get MAL tokens:', error.message);
+      }
+
+      if (malTokens && Date.now() < malTokens.expiresAt) {
+        const malService = require('../services/malService');
+
+        // Check for anime list add request
+        const addMatch = prompt.match(addAnimePattern);
+        if (addMatch) {
+          const animeName = addMatch[1] || addMatch[3] || addMatch[6];
+          if (animeName) {
+            console.log('🎯 Detected add anime request:', animeName);
+            
+            const searchResult = await malService.searchAnime(animeName.trim(), malTokens.accessToken, 3);
+            
+            if (searchResult.success && searchResult.anime.length > 0) {
+              const anime = searchResult.anime[0];
+              const updateResult = await malService.updateAnimeStatus(
+                anime.id,
+                malTokens.accessToken,
+                { status: 'plan_to_watch' }
+              );
+
+              if (updateResult.success) {
+                malActionTaken = true;
+                actionResponse = `Kyaa~ I found "${anime.title}" and added it to your plan to watch list, master! (*≧ω≦*) You have great taste! ✨`;
+              } else {
+                actionResponse = `Oh no! I found "${anime.title}" but had trouble adding it to your list, master! (>.<) Maybe it's already there? 💕`;
+              }
+            } else {
+              actionResponse = `Ehehe~ I couldn't find "${animeName}" exactly, master! (>.<) Could you try the full anime title? ✨`;
+            }
+          }
+        }
+
+        // Check for status update request
+        if (!malActionTaken) {
+          const updateMatch = prompt.match(updateStatusPattern);
+          if (updateMatch) {
+            const status = (updateMatch[1] || updateMatch[4] || '').toLowerCase();
+            const animeName = updateMatch[2] || updateMatch[3];
+            
+            if (animeName && (status === 'finished' || status === 'completed' || status === 'done')) {
+              console.log('🎯 Detected status update:', animeName, 'to completed');
+              
+              const searchResult = await malService.searchAnime(animeName.trim(), malTokens.accessToken, 3);
+              
+              if (searchResult.success && searchResult.anime.length > 0) {
+                const anime = searchResult.anime[0];
+                const updateResult = await malService.updateAnimeStatus(
+                  anime.id,
+                  malTokens.accessToken,
+                  { status: 'completed' }
+                );
+
+                if (updateResult.success) {
+                  malActionTaken = true;
+                  actionResponse = `Yay! I've marked "${anime.title}" as completed, master! (*≧ω≦*) How did you like it? ✨`;
+                }
+              }
+            }
+          }
+        }
+
+        // Get anime list context for personalized responses
+        if (!malActionTaken || options.includeAnimeList) {
+          const animeListResult = await malService.getUserAnimeList(malTokens.accessToken, null, 20);
+          
+          if (animeListResult.success) {
+            animeContext = malService.formatAnimeListForWaifu(animeListResult.animeList);
+            if (!malActionTaken) {
+              enhancedPrompt = `User's current anime list context:\n${animeContext}\n\nUser's message: ${prompt}\n\nPlease respond as a cute anime maid who knows about their anime preferences!`;
+            }
+          }
+        }
+      } else {
+        // No MAL connection
+        if (addAnimePattern.test(prompt) || updateStatusPattern.test(prompt)) {
+          actionResponse = "I'd love to help you manage your anime list, master, but you need to connect MyAnimeList first! (´∀｀)♡ Click 'Connect MAL' to get started!";
+          malActionTaken = true;
+        }
+      }
+    } catch (malError) {
+      console.log('MAL action processing error:', malError.message);
+      // Continue without MAL actions
+    }
+
+    // If we performed a MAL action, use that response
+    if (malActionTaken) {
+      res.json({
+        success: true,
+        response: actionResponse,
+        metadata: {
+          model: 'gemini-2.5-flash',
+          waifuMode: true,
+          personality: 'anime_waifu',
+          animeListIncluded: !!animeContext,
+          malActionPerformed: true,
+          enableThinking: options.enableThinking || false,
+          timestamp: new Date().toISOString()
+        }
+      });
+      return;
+    }
+
+    // Otherwise, generate a normal waifu response
     const waifuOptions = { ...options, disableWaifu: false };
-    const response = await geminiService.generateText(prompt, waifuOptions);
+    const response = await geminiService.generateText(enhancedPrompt, waifuOptions);
     
     res.json({
       success: true,
@@ -53,6 +174,8 @@ router.post('/waifu', async (req, res) => {
         model: 'gemini-2.5-flash',
         waifuMode: true,
         personality: 'anime_waifu',
+        animeListIncluded: !!animeContext,
+        malActionPerformed: false,
         enableThinking: options.enableThinking || false,
         timestamp: new Date().toISOString()
       }
