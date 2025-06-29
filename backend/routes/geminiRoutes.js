@@ -50,6 +50,8 @@ router.post('/waifu', async (req, res) => {
     // Check for MAL actions in the prompt
     const addAnimePattern = /add\s+(.+?)\s+to\s+(my\s+)?list|put\s+(.+?)\s+(on|in)\s+(my\s+)?list|I\s+want\s+to\s+watch\s+(.+)/i;
     const updateStatusPattern = /(finished|completed|watching|dropped)\s+(.+)|(.+)\s+(finished|completed|done)/i;
+    const rateAnimePattern = /rate\s+(.+?)\s+(\d+)(?:\/10)?|give\s+(.+?)\s+(\d+)(?:\/10)?|(.+?)\s+(\d+)(?:\/10)?\s+(?:stars?|points?)|(.+?)\s+gets?\s+(\d+)(?:\/10)?/i;
+    const removeAnimePattern = /remove\s+(.+?)\s+from\s+(my\s+)?list|delete\s+(.+?)\s+from\s+(my\s+)?list|take\s+(.+?)\s+off\s+(my\s+)?list/i;
 
     try {
       // Get MAL tokens from malRoutes module
@@ -122,6 +124,79 @@ router.post('/waifu', async (req, res) => {
           }
         }
 
+        // Check for rating request
+        if (!malActionTaken) {
+          const rateMatch = prompt.match(rateAnimePattern);
+          if (rateMatch) {
+            const animeName = rateMatch[1] || rateMatch[3] || rateMatch[5] || rateMatch[7];
+            const score = parseInt(rateMatch[2] || rateMatch[4] || rateMatch[6] || rateMatch[8]);
+            
+            if (animeName && score && score >= 1 && score <= 10) {
+              console.log('🎯 Detected rating request:', animeName, 'score:', score);
+              
+              const searchResult = await malService.searchAnime(animeName.trim(), malTokens.accessToken, 3);
+              
+              if (searchResult.success && searchResult.anime.length > 0) {
+                const anime = searchResult.anime[0];
+                const updateResult = await malService.updateAnimeStatus(
+                  anime.id,
+                  malTokens.accessToken,
+                  { score: score }
+                );
+
+                if (updateResult.success) {
+                  malActionTaken = true;
+                  let reaction = '';
+                  if (score >= 9) reaction = 'Kyaa~ Amazing choice, master! (*≧ω≦*)';
+                  else if (score >= 7) reaction = 'Great taste, master! (´∀｀)♡';
+                  else if (score >= 5) reaction = 'That\'s fair, master! Not every anime is perfect~ (´∀｀)';
+                  else reaction = 'Aww, you didn\'t like it much, master? (>.<)';
+                  
+                  actionResponse = `${reaction} I've given "${anime.title}" a score of ${score}/10 on your list! ✨`;
+                } else {
+                  actionResponse = `Ehehe~ I had trouble rating "${anime.title}", master! (>.<) Maybe try again? 💕`;
+                }
+              } else {
+                actionResponse = `I couldn't find "${animeName}" to rate it, master! (>.<) Could you check the spelling? ✨`;
+              }
+            } else if (score && (score < 1 || score > 10)) {
+              actionResponse = `Kyaa~ The score needs to be between 1 and 10, master! (>.<) What would you rate it? ✨`;
+              malActionTaken = true;
+            }
+          }
+        }
+
+        // Check for removal request
+        if (!malActionTaken) {
+          const removeMatch = prompt.match(removeAnimePattern);
+          if (removeMatch) {
+            const animeName = removeMatch[1] || removeMatch[3] || removeMatch[5];
+            
+            if (animeName) {
+              console.log('🎯 Detected removal request:', animeName);
+              
+              const searchResult = await malService.searchAnime(animeName.trim(), malTokens.accessToken, 3);
+              
+              if (searchResult.success && searchResult.anime.length > 0) {
+                const anime = searchResult.anime[0];
+                const deleteResult = await malService.deleteAnimeFromList(
+                  anime.id,
+                  malTokens.accessToken
+                );
+
+                if (deleteResult.success) {
+                  malActionTaken = true;
+                  actionResponse = `Okay master! I've removed "${anime.title}" from your list! (´∀｀) Changed your mind about it? ✨`;
+                } else {
+                  actionResponse = `Hmm~ I had trouble removing "${anime.title}" from your list, master! (>.<) Maybe it wasn't there? 💕`;
+                }
+              } else {
+                actionResponse = `I couldn't find "${animeName}" on your list to remove, master! (>.<) Could you check the name? ✨`;
+              }
+            }
+          }
+        }
+
         // Get anime list context for personalized responses
         if (!malActionTaken || options.includeAnimeList) {
           const animeListResult = await malService.getUserAnimeList(malTokens.accessToken, null, 20);
@@ -135,7 +210,7 @@ router.post('/waifu', async (req, res) => {
         }
       } else {
         // No MAL connection
-        if (addAnimePattern.test(prompt) || updateStatusPattern.test(prompt)) {
+        if (addAnimePattern.test(prompt) || updateStatusPattern.test(prompt) || rateAnimePattern.test(prompt) || removeAnimePattern.test(prompt)) {
           actionResponse = "I'd love to help you manage your anime list, master, but you need to connect MyAnimeList first! (´∀｀)♡ Click 'Connect MAL' to get started!";
           malActionTaken = true;
         }
