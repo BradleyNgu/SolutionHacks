@@ -1005,4 +1005,23 @@ Examples:
     }
 });
 
-module.exports = router; 
+// Helper function to get user tokens (for other modules)
+function getUserTokens(userId = 'default') {
+    const tokens = userTokens.get(userId);
+    if (!tokens) {
+        return null;
+    }
+    
+    // Check if tokens are expired
+    if (Date.now() > tokens.expiresAt) {
+        userTokens.delete(userId);
+        return null;
+    }
+    
+    return tokens;
+}
+
+// Export the router and helper functions
+module.exports = router;
+module.exports.getUserTokens = getUserTokens;
+module.exports.userTokens = userTokens; // Export the userTokens Map for direct access 
