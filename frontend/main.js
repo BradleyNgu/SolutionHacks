@@ -83,6 +83,14 @@ function createTray() {
   tray = new Tray(path.join(__dirname, 'icon.png'));
 
   const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Chat with Maid',
+      click: () => {
+        if (mainWindow) {
+          mainWindow.webContents.send('show-chat-window');
+        }
+      }
+    },
     { label: 'Mute', click: () => {} },
     {
       label: 'Connect MyAnimeList',
