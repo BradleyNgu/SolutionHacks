@@ -1,280 +1,294 @@
-# SolutionHacks Backend
+# Backend API Server
 
-A Node.js backend service providing Text-to-Speech (TTS) and Google Gemini AI integration.
+A Node.js/Express backend server providing AI chat capabilities using Google's Gemini AI and Text-to-Speech services with anime waifu personality.
 
 ## Features
 
-- **Gemini AI Integration**: Text generation, chat functionality, and conversation management
-- **Text-to-Speech**: Multiple TTS providers including Web Speech API and Google Cloud TTS
-- **RESTful API**: Well-structured endpoints for frontend integration
-- **Environment Configuration**: Flexible configuration with environment variables
+- **Anime Waifu AI Companion**: AI responses with cute, caring anime-style personality
+- **Waifu Text-to-Speech**: High-pitched, expressive voice synthesis for anime character experience
+- **Multiple TTS Providers**: Web Speech API, Browser TTS, and Google Cloud TTS
+- **Flexible AI Options**: Can disable waifu mode for standard responses
+- **RESTful API**: Clean endpoints for easy integration
 
-## Setup Instructions
+## Quick Start
 
-### 1. Environment Configuration
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-Copy the environment template and configure your API keys:
+2. **Set up environment variables:**
+   ```bash
+   # Required for AI functionality
+   GEMINI_API_KEY=your_gemini_api_key
 
-```bash
-cp backend/env.template backend/.env
-```
+   # Optional for Google Cloud TTS (enhanced waifu voice)
+   GCP_PROJECT_ID=your_project_id
+   GCP_KEY_FILENAME=path/to/service-account.json
 
-Edit `backend/.env` and add your API keys:
+   # Optional
+   PORT=3001
+   FRONTEND_URL=http://localhost:3000
+   ```
 
-```env
-# Required
-GEMINI_API_KEY=your_actual_gemini_api_key
+3. **Start the server:**
+   ```bash
+   npm start
+   ```
 
-# Optional (for enhanced TTS)
-GCP_PROJECT_ID=your_google_cloud_project_id
-GCP_KEY_FILENAME=path/to/service-account-key.json
-```
+## Anime Waifu Features
 
-### 2. Get Your Gemini API Key
+### 🎭 Waifu Personality
+The AI companion has a built-in anime waifu personality featuring:
+- Sweet, bubbly, and affectionate speech patterns
+- Anime-style expressions: "kyaa~", "ehehe~", "nya~", "desu~"
+- Endearing terms: calls you "Master" or "Darling"
+- Cute emoticons: (>.<), (*≧ω≦*), (´∀｀)♡
+- Playful and occasionally tsundere behavior
+- Caring and supportive responses
 
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Create a new API key
-3. Copy the key to your `.env` file
-
-### 3. Install Dependencies
-
-```bash
-npm install
-```
-
-### 4. Start the Server
-
-Development mode (with auto-reload):
-```bash
-npm run dev
-```
-
-Production mode:
-```bash
-npm start
-```
-
-The server will start on `http://localhost:3001`
+### 🎵 Waifu Voice Settings
+- **High Pitch**: 1.8x for web browsers, 4.0x for Google Cloud
+- **Fast Rate**: 1.1-1.15x speaking speed for energetic feel
+- **Female Voices**: Automatically selects feminine voices
+- **Expressive**: Neural voices when available for more emotion
 
 ## API Endpoints
 
-### Health Check
-- `GET /health` - Check if the server is running
+### 🤖 Gemini AI Endpoints
 
-### Gemini AI Endpoints
-
-#### Generate Text
-```
+#### Generate Text (Waifu Mode Default)
+```http
 POST /api/gemini/generate
 Content-Type: application/json
 
 {
-  "prompt": "Your text prompt here",
+  "prompt": "How are you today?",
   "options": {
-    "temperature": 0.7,
-    "maxTokens": 2048,
-    "enableThinking": false
+    "temperature": 0.9,
+    "disableWaifu": false
+  }
+}
+```
+
+#### Dedicated Waifu Endpoint
+```http
+POST /api/gemini/waifu
+Content-Type: application/json
+
+{
+  "prompt": "Tell me about yourself",
+  "options": {
+    "temperature": 0.9
   }
 }
 ```
 
 #### Chat with History
-```
+```http
 POST /api/gemini/chat
 Content-Type: application/json
 
 {
   "messages": [
-    {"role": "user", "content": "Hello"},
-    {"role": "assistant", "content": "Hi there!"},
-    {"role": "user", "content": "How are you?"}
+    {"role": "user", "content": "Hello!"},
+    {"role": "assistant", "content": "Kyaa~ Hello Master! (*≧ω≦*)"}
   ],
   "options": {
-    "temperature": 0.7
+    "disableWaifu": false
   }
 }
 ```
 
 #### Start Chat Session
-```
+```http
 POST /api/gemini/start-chat
 Content-Type: application/json
 
 {
   "options": {
-    "temperature": 0.7
+    "temperature": 0.9,
+    "disableWaifu": false
   }
 }
 ```
 
-#### Send Message
-```
-POST /api/gemini/send-message
-Content-Type: application/json
-
-{
-  "message": "Your message here",
-  "sessionId": "session_id_from_start_chat"
-}
+#### Get Waifu Info
+```http
+GET /api/gemini/waifu-info
 ```
 
-#### Health Check
-```
-GET /api/gemini/health
-```
+### 🎵 Text-to-Speech Endpoints
 
-### TTS Endpoints
-
-#### Convert Text to Speech
-```
+#### Text-to-Speech (Waifu Voice Default)
+```http
 POST /api/tts/speak
 Content-Type: application/json
 
 {
-  "text": "Hello, this is a test",
+  "text": "Hello Master! How are you today? (*´∀｀*)",
   "options": {
     "provider": "web",
-    "language": "en-US",
-    "rate": 1.0,
-    "pitch": 1.0,
-    "volume": 1.0
+    "disableWaifu": false
   }
 }
 ```
 
-#### Speak with Specific Voice
-```
-POST /api/tts/speak-with-voice
+#### Dedicated Waifu TTS
+```http
+POST /api/tts/waifu-speak
 Content-Type: application/json
 
 {
-  "text": "Hello world",
+  "text": "Kyaa~ You're so sweet, Darling! (>.<)",
   "provider": "web",
-  "voiceName": "Google US English",
-  "language": "en-US",
   "options": {
-    "rate": 1.2,
-    "pitch": 0.8
+    "pitch": 1.8,
+    "rate": 1.1
   }
 }
 ```
 
-#### Get Available Voices
+#### Get Waifu Voice Recommendations
+```http
+GET /api/tts/waifu-voices?provider=web
 ```
+
+#### Get Available Voices
+```http
 GET /api/tts/voices?provider=web
 ```
 
 #### Get TTS Providers
-```
+```http
 GET /api/tts/providers
 ```
 
-#### Get TTS Configuration
-```
-GET /api/tts/config
-```
-
-#### Health Check
-```
-GET /api/tts/health
-```
-
-## TTS Providers
-
-### Web Speech API (Default)
-- **Provider**: `web`
-- **Description**: Browser-based TTS using Web Speech API
-- **Advantages**: No additional setup required, works in most browsers
-- **Limitations**: Voice quality depends on browser and OS
-
-### Browser TTS
-- **Provider**: `browser`
-- **Description**: Client-side text-to-speech synthesis
-- **Usage**: Returns configuration for client-side implementation
-
-### Google Cloud TTS (Optional)
-- **Provider**: `google`
-- **Description**: High-quality voices from Google Cloud
-- **Setup**: Requires Google Cloud project and service account
-- **Advantages**: High-quality voices, many languages and voice options
-
 ## Configuration Options
 
-### Gemini AI Options
-- `temperature`: Controls randomness (0.0 to 1.0)
-- `topP`: Controls diversity (0.0 to 1.0)
-- `topK`: Controls diversity (1 to 40)
-- `maxTokens`: Maximum response length
+### Waifu Mode Control
+- **Default**: Waifu mode is **enabled** by default
+- **Disable**: Add `"disableWaifu": true` to options
+- **Force Enable**: Use dedicated `/waifu` or `/waifu-speak` endpoints
 
-### TTS Options
-- `provider`: TTS provider (`web`, `browser`, `google`)
-- `language`: Language code (e.g., `en-US`, `es-ES`)
-- `voiceName`: Specific voice name
-- `rate`: Speaking rate (0.1 to 3.0)
-- `pitch`: Voice pitch (0.0 to 2.0)
-- `volume`: Volume level (0.0 to 1.0)
+### TTS Providers
+1. **Google Cloud TTS** (Best for waifu) - Requires credentials
+2. **Web Speech API** (Good) - Browser-based
+3. **Browser TTS** (Basic) - Client-side synthesis
 
-## Error Handling
-
-All endpoints return structured error responses:
-
-```json
+### Voice Settings
+```javascript
 {
-  "error": "Error description",
-  "message": "Detailed error message"
+  "waifuSettings": {
+    "web": {
+      "rate": 1.1,
+      "pitch": 1.8,
+      "preferredVoices": ["Google US English Female", "Microsoft Zira", "Samantha"]
+    },
+    "google": {
+      "rate": 1.15,
+      "pitch": 4.0,
+      "voiceNames": ["en-US-Neural2-F", "en-US-Wavenet-F"]
+    }
+  }
 }
 ```
 
-Common HTTP status codes:
-- `200`: Success
-- `400`: Bad Request (missing required parameters)
-- `500`: Internal Server Error
-- `503`: Service Unavailable (API service down)
+## Example Usage
+
+### Complete Waifu Interaction
+```javascript
+// 1. Generate waifu response
+const aiResponse = await fetch('/api/gemini/waifu', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    prompt: "I'm feeling sad today"
+  })
+});
+
+// 2. Convert response to waifu voice
+const ttsResponse = await fetch('/api/tts/waifu-speak', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    text: aiResponse.response,
+    provider: "web"
+  })
+});
+```
+
+### Disable Waifu Mode
+```javascript
+// Standard AI response without waifu personality
+const response = await fetch('/api/gemini/generate', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    prompt: "What is the weather like?",
+    options: { disableWaifu: true }
+  })
+});
+```
+
+## Health Checks
+
+- **AI Service**: `GET /api/gemini/health`
+- **TTS Service**: `GET /api/tts/health`
+- **Server**: `GET /health`
+
+## Dependencies
+
+- **express**: Web server framework
+- **cors**: Cross-origin resource sharing
+- **dotenv**: Environment variable management
+- **@google/genai**: Google Gemini AI API client
+- **@google-cloud/text-to-speech**: Google Cloud TTS (optional)
 
 ## Development
 
-### Project Structure
-```
-backend/
-├── config/
-│   └── config.js          # Configuration management
-├── routes/
-│   ├── geminiRoutes.js    # Gemini AI endpoints
-│   └── ttsRoutes.js       # TTS endpoints
-├── services/
-│   ├── geminiService.js   # Gemini AI service logic
-│   └── ttsService.js      # TTS service logic
-├── server.js              # Main server file
-├── env.template           # Environment template
-└── README.md              # This file
+### Testing the Waifu Features
+```bash
+# Test waifu AI response
+curl -X POST http://localhost:3001/api/gemini/waifu \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Hello!"}'
+
+# Test waifu TTS
+curl -X POST http://localhost:3001/api/tts/waifu-speak \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Kyaa~ Hello Master!", "provider": "web"}'
 ```
 
-### Adding New Features
+### Environment Setup
+Create a `.env` file:
+```env
+GEMINI_API_KEY=your_actual_api_key_here
+PORT=3001
+FRONTEND_URL=http://localhost:3000
 
-1. **New Service**: Add to `services/` directory
-2. **New Routes**: Add to `routes/` directory and register in `server.js`
-3. **Configuration**: Add to `config/config.js`
+# Optional Google Cloud TTS
+GCP_PROJECT_ID=your-project-id
+GCP_KEY_FILENAME=./service-account.json
+```
 
 ## Troubleshooting
 
 ### Common Issues
+1. **No Waifu Personality**: Check that `disableWaifu` is not set to `true`
+2. **Voice Not High-Pitched**: Ensure waifu voice settings are applied
+3. **Google TTS Unavailable**: Verify GCP credentials and project setup
+4. **CORS Errors**: Check FRONTEND_URL in configuration
 
-1. **"Gemini API key is required"**
-   - Make sure `GEMINI_API_KEY` is set in your `.env` file
-   - Verify the API key is valid
-
-2. **"Google Cloud TTS not available"**
-   - This is optional - the system will use Web Speech API instead
-   - To enable: Set up Google Cloud project and add credentials
-
-3. **CORS Errors**
-   - Make sure your frontend URL is configured in `FRONTEND_URL`
-   - Default allows `http://localhost:3000`
-
-4. **Port Already in Use**
-   - Change the `PORT` in your `.env` file
-   - Default is `3001`
+### Voice Troubleshooting
+- Web Speech API voices vary by browser and OS
+- For best waifu experience, use Google Cloud TTS
+- Some browsers may not support pitch adjustment
 
 ## License
 
-This project is licensed under the ISC License. 
+This project is for educational and entertainment purposes. Please ensure you have appropriate API keys and follow service terms of use.
+
+---
+
+**Enjoy your anime waifu companion!** (´∀｀)♡ 
