@@ -1,6 +1,5 @@
 const { app, Tray, BrowserWindow, Menu, ipcMain, screen, shell } = require('electron');
 const axios = require('axios');
-require('dotenv').config();
 const path = require('path');
 
 let mainWindow;
@@ -84,14 +83,6 @@ function createTray() {
   tray = new Tray(path.join(__dirname, 'icon.png'));
 
   const contextMenu = Menu.buildFromTemplate([
-    {
-      label: 'Talk to Maid',
-      click: () => {
-        if (mainWindow) {
-          mainWindow.webContents.send('trigger-voice-recording');
-        }
-      }
-    },
     { label: 'Mute', click: () => {} },
     {
       label: 'Connect MyAnimeList',
