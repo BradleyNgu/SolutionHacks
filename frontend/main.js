@@ -145,21 +145,39 @@ function createWindow() {
 }
 
 function createTray() {
-  tray = new Tray(path.join(__dirname, 'icon.png'));
+  // Mac-specific tray icon handling
+  let trayIconPath = path.join(__dirname, 'icon.png');
+  
+  // Check if icon file exists
+  const fs = require('fs');
+  if (!fs.existsSync(trayIconPath)) {
+    console.error('Tray icon not found at:', trayIconPath);
+    return;
+  }
 
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: 'Talk to Maid',
-      click: () => {
-        if (mainWindow) {
-          mainWindow.webContents.send('trigger-voice-recording');
+  try {
+    tray = new Tray(trayIconPath);
+    
+    // Mac-specific tray settings
+    if (process.platform === 'darwin') {
+      tray.setTitle('AniMaid'); // Shows text next to icon on Mac if icon fails
+    }
+
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: 'Talk to Maid',
+        click: () => {
+          if (mainWindow) {
+            mainWindow.webContents.send('trigger-voice-recording');
+            mainWindow.show(); // Ensure window is visible
+            mainWindow.focus(); // Bring to front
+          }
         }
-      }
-    },
-    { label: 'Mute', click: () => {} },
-    {
-      label: 'Connect MyAnimeList',
-      click: async () => {
+      },
+      { label: 'Mute', click: () => {} },
+      {
+        label: 'Connect MyAnimeList',
+        click: async () => {
         try {
           // Add timeout and proper error handling
           const controller = new AbortController();
@@ -217,11 +235,20 @@ function createTray() {
     }
   ]);
 
-  tray.setToolTip('AniMaid');
-  tray.setContextMenu(contextMenu);
-  tray.on('double-click', () => {
-    mainWindow.show();
-  });
+    tray.setToolTip('AniMaid');
+    tray.setContextMenu(contextMenu);
+    tray.on('double-click', () => {
+      if (mainWindow) {
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    });
+    
+    console.log('✅ Tray icon created successfully');
+  } catch (error) {
+    console.error('❌ Failed to create tray icon:', error);
+    console.log('Continuing without tray icon...');
+  }
 }
 
 app.whenReady().then(() => {
@@ -230,5 +257,23 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit();
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+  // On Mac, keep app running even when all windows are closed
+});
+
+// Mac-specific: Re-create window when dock icon is clicked
+app.on('activate', function () {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  } else if (mainWindow) {
+    mainWindow.show();
+    mainWindow.focus();
+  }
+});
+
+// Handle app termination gracefully
+app.on('before-quit', () => {
+  app.isQuiting = true;
 });

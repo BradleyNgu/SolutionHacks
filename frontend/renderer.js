@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     console.error('❌ Voice bubble element not found!');
   }
-
+  
 });
 
 // ⏱️ Random speech bubble quotes every 5 seconds
@@ -324,7 +324,7 @@ function showSpeechBubble(text) {
 function hideSpeechBubble() {
   const bubble = document.getElementById('voice-bubble');
   if (bubble) {
-    bubble.style.display = 'none';
+  bubble.style.display = 'none';
   }
 }
 
@@ -348,8 +348,8 @@ async function playTTSVoice(text, force = false) {
     // Check if TTS is enabled (unless forced)
     if (!ttsEnabled && !force) {
       console.log('🔇 TTS disabled, skipping playback');
-      return;
-    }
+    return;
+  }
 
     // Stop any current speech
     stopCurrentTTS();
@@ -658,8 +658,8 @@ async function sendToGemini(promptText) {
       await playTTSVoice(data.response);
       
       // Auto-hide after 15 seconds
-      setTimeout(() => {
-        hideSpeechBubble();
+    setTimeout(() => {
+      hideSpeechBubble();
       }, 15000);
 
     } catch (error) {
