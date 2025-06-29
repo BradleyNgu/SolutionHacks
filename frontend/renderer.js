@@ -38,16 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     console.error('❌ Voice bubble element not found!');
   }
-  
-  // Add test button listener
-  const testButton = document.getElementById('test-speech');
-  if (testButton) {
-    testButton.addEventListener('click', () => {
-      console.log('🧪 Test button clicked');
-      showSpeechBubble("🧪 Opening text input...");
-      setTimeout(() => openTextInput(), 1000);
-    });
-  }
+
 });
 
 // ⏱️ Random speech bubble quotes every 5 seconds
@@ -117,7 +108,7 @@ if (window.api && window.api.onVoiceRecordingTriggered) {
     setTimeout(() => openTextInput(), 500);
   });
 } else {
-  console.log('⚠️ IPC bridge not available, using test button only');
+  console.log('⚠️ IPC bridge not available - voice input requires main process');
 }
 
 // Add error handler for messages from main process
