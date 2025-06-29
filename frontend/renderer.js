@@ -170,6 +170,7 @@ let isProcessingRequest = false;
 // Add text input function
 function openTextInput() {
   // Prevent opening multiple modals
+  window.api?.setTextModalOpen?.(true);
   if (isModalOpen) {
     console.log('⚠️ Modal already open, ignoring duplicate call');
     return;
@@ -282,6 +283,8 @@ function openTextInput() {
 
 // Helper function to close modal and clean up
 function closeModal() {
+  isModalOpen = false;
+  window.api?.setTextModalOpen?.(false);
   const modal = document.getElementById('text-input-modal');
   const textField = document.getElementById('text-input-field');
   const sendBtn = document.getElementById('send-text-btn');

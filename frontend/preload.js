@@ -7,5 +7,6 @@ contextBridge.exposeInMainWorld('api', {
   },
   onShowError: (callback) => {
     ipcRenderer.on('show-error', callback);
-  }
+  },
+  setTextModalOpen: (isOpen) => ipcRenderer.send('text-modal-open-state', isOpen)
 });

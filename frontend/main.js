@@ -2,6 +2,10 @@ const { app, Tray, BrowserWindow, Menu, ipcMain, screen, shell, session } = requ
 const axios = require('axios');
 require('dotenv').config();
 const path = require('path');
+let isTextModalOpen = false;
+ipcMain.on('text-modal-open-state', (event, state) => {
+  isTextModalOpen = state;
+});
 
 // Add targeted command line switches to suppress chunked upload errors
 app.commandLine.appendSwitch('--disable-features', 'VizDisplayCompositor');
@@ -118,7 +122,7 @@ function createWindow() {
   }
 
   function moveToRandomPoint() {
-    if (moving) return;
+    if (moving || isTextModalOpen) return;
     const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
     const maxX = screenWidth - windowWidth;
     const maxY = screenHeight - windowHeight;
