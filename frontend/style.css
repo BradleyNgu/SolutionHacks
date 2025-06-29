@@ -1,49 +1,162 @@
 body {
   margin: 0;
-  background-color: transparent;
+  padding: 0;
+  background: transparent;
+  font-family: 'Segoe UI', Arial, sans-serif;
   overflow: hidden;
+  user-select: none;
+  -webkit-app-region: drag;
 }
 
 #mascot-container {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  -webkit-app-region: no-drag;
 }
 
 #maid {
-  width: 300px;
+  width: 350px;
+  height: auto;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 #speech-bubble {
-  background: white;
-  border-radius: 12px;
-  padding: 10px;
-  font-family: sans-serif;
-  position: absolute;
-  top: -60px;
-  right: 20px;
-  box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+  padding: 15px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  margin-top: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  max-width: 300px;
+  word-wrap: break-word;
 }
 
 #voice-bubble {
   position: fixed;
-  top: 50px;
-  left: 50px;
-  max-width: 400px;
-  min-width: 200px;
-  min-height: 50px;
-  padding: 15px 20px;
-  background-color: #ffffcc;
-  border: 3px solid #ff6600;
-  border-radius: 15px;
-  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
-  font-family: Arial, sans-serif;
-  font-size: 16px;
-  font-weight: bold;
-  display: block;
-  z-index: 9999;
-  word-wrap: break-word;
-  white-space: pre-wrap;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffffcc;
   color: #333;
+  padding: 15px 20px;
+  border-radius: 15px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: 2px solid #ffd700;
+  max-width: 350px;
+  word-wrap: break-word;
+  z-index: 1000;
+  display: none;
+}
+
+/* Text Input Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(5px);
+  -webkit-app-region: no-drag;
+}
+
+.modal-content {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+  color: white;
+  text-align: center;
+}
+
+.modal-content h3 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+#text-input-field {
+  width: 100%;
+  height: 120px;
+  padding: 15px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+}
+
+#text-input-field:focus {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.modal-btn {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.modal-btn.primary {
+  background: #4CAF50;
+  color: white;
+}
+
+.modal-btn.primary:hover {
+  background: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+}
+
+.modal-btn.secondary {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.modal-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.modal-hint {
+  margin-top: 15px;
+  font-size: 12px;
+  opacity: 0.8;
+  font-style: italic;
 }

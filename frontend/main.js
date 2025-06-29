@@ -1,12 +1,26 @@
-const { app, Tray, BrowserWindow, Menu, ipcMain, screen, shell } = require('electron');
+const { app, Tray, BrowserWindow, Menu, ipcMain, screen, shell, session } = require('electron');
 const axios = require('axios');
 require('dotenv').config();
 const path = require('path');
+let isTextModalOpen = false;
+ipcMain.on('text-modal-open-state', (event, state) => {
+  isTextModalOpen = state;
+});
+
+// Add targeted command line switches to suppress chunked upload errors
+app.commandLine.appendSwitch('--disable-features', 'VizDisplayCompositor');
+app.commandLine.appendSwitch('--log-level', '2'); // Only show warnings and errors
+app.commandLine.appendSwitch('--disable-background-networking');
+app.commandLine.appendSwitch('--disable-default-apps');
 
 let mainWindow;
 let tray;
 
 process.on('uncaughtException', (err) => {
+  // Suppress specific Chromium network errors related to chunked uploads
+  if (err.message && err.message.includes('chunked_data_pipe_upload_data_stream')) {
+    return; // Silently ignore this specific error
+  }
   console.error('Uncaught Exception:', err);
 });
 
@@ -25,8 +39,58 @@ function createWindow() {
         contextIsolation: true,
         nodeIntegration: false,
         enableRemoteModule: false,
-        sandbox: false
+        sandbox: false,
+        webSecurity: true, // Keep security but handle errors
+        allowRunningInsecureContent: false,
+        experimentalFeatures: false
     }
+  });
+
+  // Handle web contents creation and network errors
+  mainWindow.webContents.on('did-create-window', (childWindow) => {
+    // Configure child windows with same error handling
+    childWindow.webContents.on('console-message', (event, level, message) => {
+      if (message.includes('chunked_data_pipe_upload_data_stream') || 
+          message.includes('OnSizeReceived failed')) {
+        event.preventDefault();
+      }
+    });
+  });
+
+  // Suppress console errors related to chunked uploads
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    if (message.includes('chunked_data_pipe_upload_data_stream') || 
+        message.includes('OnSizeReceived failed') ||
+        message.includes('Error: -2')) {
+      return; // Don't log these specific errors
+    }
+    console.log(`Console [${level}]:`, message);
+  });
+
+  // Handle session network errors
+  const ses = mainWindow.webContents.session;
+  
+  // Intercept and handle network requests that might cause chunked upload errors
+  ses.webRequest.onErrorOccurred((details) => {
+    if (details.error && (
+        details.error.includes('UPLOAD_FILE_CHANGED') ||
+        details.error.includes('CHUNKED_ENCODING_ERROR') ||
+        details.url.includes('speech.googleapis.com')
+    )) {
+      // Silently handle speech API errors
+      return;
+    }
+  });
+
+  // Set up request headers to prevent chunked upload issues
+  ses.webRequest.onBeforeSendHeaders((details, callback) => {
+    if (details.url.includes('speech.googleapis.com') || 
+        details.url.includes('google.com/speech-api')) {
+      // Add headers to prevent chunked encoding issues
+      details.requestHeaders['Connection'] = 'close';
+      details.requestHeaders['Transfer-Encoding'] = 'identity';
+    }
+    callback({ requestHeaders: details.requestHeaders });
   });
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
@@ -58,7 +122,7 @@ function createWindow() {
   }
 
   function moveToRandomPoint() {
-    if (moving) return;
+    if (moving || isTextModalOpen) return;
     const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
     const maxX = screenWidth - windowWidth;
     const maxY = screenHeight - windowHeight;
@@ -97,17 +161,50 @@ function createTray() {
       label: 'Connect MyAnimeList',
       click: async () => {
         try {
+          // Add timeout and proper error handling
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+          
           // Call your local backend endpoint to get the auth URL
-          const response = await axios.get('http://localhost:3001/api/mal/auth');
+          const response = await axios.get('http://localhost:3001/api/mal/auth', {
+            timeout: 10000, // 10 second timeout
+            signal: controller.signal,
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          clearTimeout(timeoutId);
           
           if (response.data && response.data.authURL) {
             // Open the URL in the user's default browser
             shell.openExternal(response.data.authURL);
           } else {
             console.error('Invalid auth response:', response.data);
+            // Show error to user via main window
+            if (mainWindow) {
+              mainWindow.webContents.send('show-error', 'Failed to get MyAnimeList auth URL - invalid response');
+            }
           }
         } catch (err) {
           console.error('Failed to get MAL auth URL:', err);
+          
+          // Provide user-friendly error messages
+          let errorMessage = 'Failed to connect to MyAnimeList';
+          
+          if (err.code === 'ECONNREFUSED' || err.message.includes('localhost:3001')) {
+            errorMessage = 'Backend server not running. Please start the backend server first.';
+          } else if (err.code === 'ENOTFOUND' || err.message.includes('network')) {
+            errorMessage = 'Network connection failed. Check your internet connection.';
+          } else if (err.name === 'AbortError' || err.code === 'ECONNABORTED') {
+            errorMessage = 'Request timed out. Please try again.';
+          }
+          
+          // Send error to renderer process for display
+          if (mainWindow) {
+            mainWindow.webContents.send('show-error', errorMessage);
+          }
         }
       }
     },

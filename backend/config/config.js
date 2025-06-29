@@ -48,39 +48,40 @@ Remember to always respond in character as a devoted anime waifu companion who l
     gcpProjectId: process.env.GCP_PROJECT_ID,
     gcpKeyFilename: process.env.GCP_KEY_FILENAME,
     
-    // Anime waifu voice settings - Japanese female voice speaking English
+    // Anime waifu voice settings - Japanese female voice
     defaultVoice: {
-      languageCode: 'en-US', // English content but with Japanese voice
-      name: 'ja-JP-Standard-B', // Japanese female voice
+      languageCode: 'ja-JP', // Japanese voice
+      name: 'ja-JP-Standard-A', // Your preferred Japanese female voice
       ssmlGender: 'FEMALE'
     },
     audioConfig: {
       audioEncoding: 'MP3',
-      speakingRate: 1.4, // Slightly faster for energetic anime feel
-      pitch: 1.1, // High pitch for kawaii voice
+      speakingRate: 1.2, // Good rate for anime waifu
+      pitch: 4.0, // High pitch for kawaii voice
       volumeGainDb: 0.0
     },
     // Waifu-specific voice options for different providers
     waifuVoiceSettings: {
       web: {
-        rate: 1.4, // Good rate for English with Japanese accent
-        pitch: 1.1, // High pitch for anime waifu voice
+        rate: 1.1, // Good rate for anime waifu
+        pitch: 1.8, // High pitch for anime waifu voice
         volume: 1.0,
         language: 'en-US', // English content
         preferredVoices: [
-          'ja-JP-Standard-A', 
-          'ja-JP-Standard-B',
-          'Japanese (Japan)',
-          'Microsoft Haruka - Japanese (Japan)',
-          'Google Japanese Female',
-          'Kyoko'
+          'Microsoft Zira - English (United States)',
+          'Microsoft Hazel - English (Great Britain)',
+          'Google US English Female',
+          'female',
+          'Samantha',
+          'Karen',
+          'Zira'
         ]
       },
       google: {
-        voiceNames: ['ja-JP-Standard-B', 'ja-JP-Standard-A', 'ja-JP-Wavenet-A', 'ja-JP-Neural2-B'],
-        languageCode: 'en-US', // English content with Japanese voice
+        voiceNames: ['ja-JP-Standard-A', 'ja-JP-Standard-B', 'ja-JP-Wavenet-A', 'ja-JP-Neural2-B'],
+        languageCode: 'ja-JP', // Japanese voice
         speakingRate: 1.4,
-        pitch: 1.1
+        pitch: 1.2 // Higher pitch for anime waifu
       }
     }
   },
