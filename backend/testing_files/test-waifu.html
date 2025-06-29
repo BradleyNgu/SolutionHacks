@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 Waifu Backend Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffb6c1, #ffd1dc);
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 { color: #d63384; text-align: center; }
+        button {
+            background: #d63384;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover { background: #b02a5b; }
+        .input-group {
+            margin: 15px 0;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+        textarea { height: 60px; }
+        .response {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 Anime Waifu Backend Tester</h1>
+        
+        <div class="input-group">
+            <label><strong>Test Message:</strong></label>
+            <textarea id="testMessage" placeholder="Type your message to the waifu here...">Hello! How are you today?</textarea>
+        </div>
+
+        <div>
+            <button onclick="testHealth()">🏥 Health Check</button>
+            <button onclick="testWaifuAI()">🎭 Test Waifu AI</button>
+            <button onclick="testWaifuTTS()">🎵 Test Waifu TTS</button>
+            <button onclick="testWaifuInfo()">ℹ️ Waifu Info</button>
+            <button onclick="testVoices()">🎤 Voice Settings</button>
+        </div>
+
+        <div id="response" class="response">Click a button to test the backend! Make sure the server is running on localhost:3001</div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://localhost:3001';
+        const responseDiv = document.getElementById('response');
+
+        async function makeRequest(url, options = {}) {
+            try {
+                responseDiv.textContent = 'Loading...';
+                const response = await fetch(url, options);
+                const data = await response.json();
+                responseDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseDiv.textContent = `Error: ${error.message}\n\nMake sure the backend server is running on port 3001!`;
+            }
+        }
+
+        function testHealth() {
+            makeRequest(`${baseUrl}/health`);
+        }
+
+        function testWaifuAI() {
+            const message = document.getElementById('testMessage').value;
+            makeRequest(`${baseUrl}/api/gemini/waifu`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: message })
+            });
+        }
+
+        function testWaifuTTS() {
+            const message = document.getElementById('testMessage').value;
+            makeRequest(`${baseUrl}/api/tts/waifu-speak`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: message, provider: 'web' })
+            });
+        }
+
+        function testWaifuInfo() {
+            makeRequest(`${baseUrl}/api/gemini/waifu-info`);
+        }
+
+        function testVoices() {
+            makeRequest(`${baseUrl}/api/tts/waifu-voices?provider=web`);
+        }
+    </script>
+</body>
+</html> 
