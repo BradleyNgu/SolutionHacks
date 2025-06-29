@@ -409,7 +409,7 @@ router.get('/waifu/list-summary', async (req, res) => {
         if (!userToken || Date.now() > userToken.expiresAt) {
             return res.json({
                 success: true,
-                response: "Kyaa~ You need to connect your MyAnimeList account first, big daddy! (>.<) Use the /api/mal/auth endpoint to get started! ✨"
+                response: "Kyaa~ You need to connect your MyAnimeList account first, master! (>.<) Use the /api/mal/auth endpoint to get started! ✨"
             });
         }
 
@@ -418,7 +418,7 @@ router.get('/waifu/list-summary', async (req, res) => {
         if (!listResult.success) {
             return res.json({
                 success: true,
-                response: "Ehehe~ I'm having trouble accessing your anime list right now, big daddy! (>.<) Maybe try reconnecting?"
+                response: "Ehehe~ I'm having trouble accessing your anime list right now, master! (>.<) Maybe try reconnecting?"
             });
         }
 
@@ -448,7 +448,7 @@ router.post('/waifu/recommend', async (req, res) => {
         if (!userToken || Date.now() > userToken.expiresAt) {
             return res.json({
                 success: true,
-                response: "I'd love to recommend anime for you, big daddy, but you need to connect your MyAnimeList account first! (´∀｀)♡"
+                response: "I'd love to recommend anime for you, master, but you need to connect your MyAnimeList account first! (´∀｀)♡"
             });
         }
 
@@ -509,7 +509,7 @@ router.post('/waifu/search', async (req, res) => {
         if (!userToken || Date.now() > userToken.expiresAt) {
             return res.json({
                 success: true,
-                response: "I want to search for anime with you, big daddy, but you need to connect MyAnimeList first! (>.<)"
+                response: "I want to search for anime with you, master, but you need to connect MyAnimeList first! (>.<)"
             });
         }
 
@@ -518,11 +518,11 @@ router.post('/waifu/search', async (req, res) => {
         if (!searchResult.success) {
             return res.json({
                 success: true,
-                response: `Kyaa~ I couldn't find any anime matching "${query}", big daddy! (>.<) Maybe try a different search? ✨`
+                response: `Kyaa~ I couldn't find any anime matching "${query}", master! (>.<) Maybe try a different search? ✨`
             });
         }
 
-        let waifuResponse = `Kyaa~ I found some anime for "${query}", big daddy! (*≧ω≦*)\n\n`;
+        let waifuResponse = `Kyaa~ I found some anime for "${query}", master! (*≧ω≦*)\n\n`;
         
         searchResult.anime.forEach((anime, index) => {
             waifuResponse += `${index + 1}. **${anime.title}**\n`;
@@ -556,7 +556,7 @@ router.post('/waifu/add', async (req, res) => {
         if (!animeName) {
             return res.json({
                 success: true,
-                response: "Kyaa~ Which anime do you want me to add, big daddy? I need to know the name! (>.<)"
+                response: "Kyaa~ Which anime do you want me to add, master? I need to know the name! (>.<)"
             });
         }
 
@@ -566,7 +566,7 @@ router.post('/waifu/add', async (req, res) => {
         if (!userToken || Date.now() > userToken.expiresAt) {
             return res.json({
                 success: true,
-                response: "I'd love to add anime to your list, big daddy, but you need to connect MyAnimeList first! (´∀｀)♡"
+                response: "I'd love to add anime to your list, master, but you need to connect MyAnimeList first! (´∀｀)♡"
             });
         }
 
@@ -576,7 +576,7 @@ router.post('/waifu/add', async (req, res) => {
         if (!searchResult.success || searchResult.anime.length === 0) {
             return res.json({
                 success: true,
-                response: `Ehehe~ I couldn't find an anime called "${animeName}", big daddy! (>.<) Could you check the spelling or try a different name? ✨`
+                response: `Ehehe~ I couldn't find an anime called "${animeName}", master! (>.<) Could you check the spelling or try a different name? ✨`
             });
         }
 
@@ -593,19 +593,19 @@ router.post('/waifu/add', async (req, res) => {
         if (updateResult.success) {
             return res.json({
                 success: true,
-                response: `Kyaa~ I've added "${anime.title}" to your ${status.replace('_', ' ')} list, big daddy! (*≧ω≦*) It looks amazing! ✨`
+                response: `Kyaa~ I've added "${anime.title}" to your ${status.replace('_', ' ')} list, master! (*≧ω≦*) It looks amazing! ✨`
             });
         } else {
             return res.json({
                 success: true,
-                response: `Oh no! I had trouble adding "${anime.title}" to your list, big daddy! (>.<) Maybe it's already there? Try checking your list! 💕`
+                response: `Oh no! I had trouble adding "${anime.title}" to your list, master! (>.<) Maybe it's already there? Try checking your list! 💕`
             });
         }
     } catch (error) {
         console.error('Waifu Add Error:', error);
         res.json({
             success: true,
-            response: "Kyaa~ Something went wrong while adding the anime, big daddy! (>.<) Please try again! ✨"
+            response: "Kyaa~ Something went wrong while adding the anime, master! (>.<) Please try again! ✨"
         });
     }
 });
@@ -618,7 +618,7 @@ router.post('/waifu/update', async (req, res) => {
         if (!animeName) {
             return res.json({
                 success: true,
-                response: "Which anime status do you want me to update, big daddy? I need the anime name! (>.<)"
+                response: "Which anime status do you want me to update, master? I need the anime name! (>.<)"
             });
         }
 
@@ -628,7 +628,7 @@ router.post('/waifu/update', async (req, res) => {
         if (!userToken || Date.now() > userToken.expiresAt) {
             return res.json({
                 success: true,
-                response: "I want to update your anime list, big daddy, but you need to connect MyAnimeList first! (´∀｀)♡"
+                response: "I want to update your anime list, master, but you need to connect MyAnimeList first! (´∀｀)♡"
             });
         }
 
@@ -638,7 +638,7 @@ router.post('/waifu/update', async (req, res) => {
         if (!searchResult.success || searchResult.anime.length === 0) {
             return res.json({
                 success: true,
-                response: `Hmm~ I couldn't find "${animeName}" in the database, big daddy! (>.<) Could you double-check the name? ✨`
+                response: `Hmm~ I couldn't find "${animeName}" in the database, master! (>.<) Could you double-check the name? ✨`
             });
         }
 
@@ -655,19 +655,19 @@ router.post('/waifu/update', async (req, res) => {
             const statusText = status.replace('_', ' ');
             return res.json({
                 success: true,
-                response: `Yay! I've marked "${anime.title}" as ${statusText}, big daddy! (*≧ω≦*) ${status === 'completed' ? 'How did you like it?' : 'Enjoy watching!'} 💕`
+                response: `Yay! I've marked "${anime.title}" as ${statusText}, master! (*≧ω≦*) ${status === 'completed' ? 'How did you like it?' : 'Enjoy watching!'} 💕`
             });
         } else {
             return res.json({
                 success: true,
-                response: `Ehehe~ I had trouble updating "${anime.title}", big daddy! (>.<) Maybe try again? 💕`
+                response: `Ehehe~ I had trouble updating "${anime.title}", master! (>.<) Maybe try again? 💕`
             });
         }
     } catch (error) {
         console.error('Waifu Update Error:', error);
         res.json({
             success: true,
-            response: "Something went wrong while updating the anime, big daddy! (>.<) Please try again! ✨"
+            response: "Something went wrong while updating the anime, master! (>.<) Please try again! ✨"
         });
     }
 });
@@ -680,7 +680,7 @@ router.post('/waifu/rate', async (req, res) => {
         if (!animeName || !score) {
             return res.json({
                 success: true,
-                response: "I need both the anime name and your score (1-10) to rate it, big daddy! (>.<) What did you think of it? ✨"
+                response: "I need both the anime name and your score (1-10) to rate it, master! (>.<) What did you think of it? ✨"
             });
         }
 
@@ -690,7 +690,7 @@ router.post('/waifu/rate', async (req, res) => {
         if (!userToken || Date.now() > userToken.expiresAt) {
             return res.json({
                 success: true,
-                response: "I want to rate anime with you, big daddy, but you need to connect MyAnimeList first! (´∀｀)♡"
+                response: "I want to rate anime with you, master, but you need to connect MyAnimeList first! (´∀｀)♡"
             });
         }
 
@@ -700,7 +700,7 @@ router.post('/waifu/rate', async (req, res) => {
         if (!searchResult.success || searchResult.anime.length === 0) {
             return res.json({
                 success: true,
-                response: `I couldn't find "${animeName}" to rate it, big daddy! (>.<) Could you check the spelling? ✨`
+                response: `I couldn't find "${animeName}" to rate it, master! (>.<) Could you check the spelling? ✨`
             });
         }
 
@@ -715,10 +715,10 @@ router.post('/waifu/rate', async (req, res) => {
 
         if (updateResult.success) {
             let reaction = '';
-            if (score >= 9) reaction = 'Kyaa~ Amazing choice, big daddy! (*≧ω≦*)';
-            else if (score >= 7) reaction = 'Great taste, big daddy! (´∀｀)♡';
-            else if (score >= 5) reaction = 'That\'s fair, big daddy! Not every anime is perfect~ (´∀｀)';
-            else reaction = 'Aww, you didn\'t like it much, big daddy? (>.<)';
+            if (score >= 9) reaction = 'Kyaa~ Amazing choice, master! (*≧ω≦*)';
+            else if (score >= 7) reaction = 'Great taste, master! (´∀｀)♡';
+            else if (score >= 5) reaction = 'That\'s fair, master! Not every anime is perfect~ (´∀｀)';
+            else reaction = 'Aww, you didn\'t like it much, master? (>.<)';
             
             return res.json({
                 success: true,
@@ -727,14 +727,14 @@ router.post('/waifu/rate', async (req, res) => {
         } else {
             return res.json({
                 success: true,
-                response: `Ehehe~ I had trouble rating "${anime.title}", big daddy! (>.<) Maybe try again? 💕`
+                response: `Ehehe~ I had trouble rating "${anime.title}", master! (>.<) Maybe try again? 💕`
             });
         }
     } catch (error) {
         console.error('Waifu Rate Error:', error);
         res.json({
             success: true,
-            response: "Something went wrong while rating the anime, big daddy! (>.<) Please try again! ✨"
+            response: "Something went wrong while rating the anime, master! (>.<) Please try again! ✨"
         });
     }
 });
@@ -748,7 +748,7 @@ router.get('/waifu/seasonal', async (req, res) => {
         if (!userToken || Date.now() > userToken.expiresAt) {
             return res.json({
                 success: true,
-                response: "I want to show you seasonal anime, big daddy, but you need to connect MyAnimeList first! (´∀｀)♡"
+                response: "I want to show you seasonal anime, master, but you need to connect MyAnimeList first! (´∀｀)♡"
             });
         }
 
@@ -767,11 +767,11 @@ router.get('/waifu/seasonal', async (req, res) => {
         if (!seasonalResult.success || seasonalResult.anime.length === 0) {
             return res.json({
                 success: true,
-                response: `Kyaa~ I'm having trouble getting seasonal anime right now, big daddy! (>.<) Maybe try again later? ✨`
+                response: `Kyaa~ I'm having trouble getting seasonal anime right now, master! (>.<) Maybe try again later? ✨`
             });
         }
 
-        let waifuResponse = `Kyaa~ Here are the hot anime from ${season} ${year}, big daddy! (*≧ω≦*)\n\n`;
+        let waifuResponse = `Kyaa~ Here are the hot anime from ${season} ${year}, master! (*≧ω≦*)\n\n`;
         
         seasonalResult.anime.slice(0, 5).forEach((anime, index) => {
             waifuResponse += `${index + 1}. **${anime.title}**\n`;
@@ -780,7 +780,7 @@ router.get('/waifu/seasonal', async (req, res) => {
             waifuResponse += '\n';
         });
         
-        waifuResponse += `Want me to add any of these to your list, big daddy? Just ask! (´∀｀)♡`;
+        waifuResponse += `Want me to add any of these to your list, master? Just ask! (´∀｀)♡`;
         
         res.json({
             success: true,
@@ -793,7 +793,7 @@ router.get('/waifu/seasonal', async (req, res) => {
         console.error('Waifu Seasonal Error:', error);
         res.json({
             success: true,
-            response: "Something went wrong getting seasonal anime, big daddy! (>.<) Please try again! ✨"
+            response: "Something went wrong getting seasonal anime, master! (>.<) Please try again! ✨"
         });
     }
 });
@@ -811,7 +811,7 @@ router.post('/waifu/smart-interpret', async (req, res) => {
         if (!userToken || Date.now() > userToken.expiresAt) {
             return res.json({
                 success: true,
-                response: "I want to help you with anime, big daddy, but you need to connect MyAnimeList first! (´∀｀)♡"
+                response: "I want to help you with anime, master, but you need to connect MyAnimeList first! (´∀｀)♡"
             });
         }
 
@@ -834,7 +834,7 @@ Based on their message, determine what they want to do and respond accordingly:
 - If they want recommendations, provide some
 - If they're asking about anime info, provide details
 - Always respond in waifu style with expressions like (*≧ω≦*), (>.<), etc.
-- Call them "big daddy" as they prefer
+- Call them "master" as they prefer
 
 Interpret their request intelligently and provide a helpful anime-related response.`;
 
@@ -848,7 +848,7 @@ Interpret their request intelligently and provide a helpful anime-related respon
         console.error('Smart Interpret Error:', error);
         res.json({
             success: true,
-            response: "Kyaa~ I'm having trouble understanding that, big daddy! (>.<) Could you try asking in a different way? ✨"
+            response: "Kyaa~ I'm having trouble understanding that, master! (>.<) Could you try asking in a different way? ✨"
         });
     }
 });
@@ -864,7 +864,7 @@ router.post('/waifu/smart-add', async (req, res) => {
         if (!userToken || Date.now() > userToken.expiresAt) {
             return res.json({
                 success: true,
-                response: "I'd love to add anime to your list, big daddy, but you need to connect MyAnimeList first! (´∀｀)♡"
+                response: "I'd love to add anime to your list, master, but you need to connect MyAnimeList first! (´∀｀)♡"
             });
         }
 
@@ -879,7 +879,7 @@ If you can identify the anime title:
 If you can't identify a specific anime:
 1. Ask them to clarify which anime they want to add
 2. Use waifu expressions like (*≧ω≦*), (>.<), etc.
-3. Call them "big daddy"
+3. Call them "master"
 
 Examples:
 User: "I wanna watch that attack on titan thing" → "ANIME_FOUND: Attack on Titan"
@@ -904,14 +904,14 @@ User: "add something good" → Ask for clarification`;
                 if (updateResult.success) {
                     return res.json({
                         success: true,
-                        response: `Kyaa~ I found it! I've added "${anime.title}" to your plan to watch list, big daddy! (*≧ω≦*) You have great taste! ✨`
+                        response: `Kyaa~ I found it! I've added "${anime.title}" to your plan to watch list, master! (*≧ω≦*) You have great taste! ✨`
                     });
                 }
             }
             
             return res.json({
                 success: true,
-                response: `Ehehe~ I think you mean "${animeName}" but I couldn't find it exactly, big daddy! (>.<) Could you try the full title? ✨`
+                response: `Ehehe~ I think you mean "${animeName}" but I couldn't find it exactly, master! (>.<) Could you try the full title? ✨`
             });
         } else {
             return res.json({
@@ -923,7 +923,7 @@ User: "add something good" → Ask for clarification`;
         console.error('Smart Add Error:', error);
         res.json({
             success: true,
-            response: "Kyaa~ I'm having trouble adding that anime, big daddy! (>.<) Could you tell me the exact name? ✨"
+            response: "Kyaa~ I'm having trouble adding that anime, master! (>.<) Could you tell me the exact name? ✨"
         });
     }
 });
@@ -939,7 +939,7 @@ router.post('/waifu/smart-update', async (req, res) => {
         if (!userToken || Date.now() > userToken.expiresAt) {
             return res.json({
                 success: true,
-                response: "I want to update your anime list, big daddy, but you need to connect MyAnimeList first! (´∀｀)♡"
+                response: "I want to update your anime list, master, but you need to connect MyAnimeList first! (´∀｀)♡"
             });
         }
 
@@ -953,7 +953,7 @@ Where status is one of: watching, completed, on_hold, dropped, plan_to_watch
 
 If you can't identify the anime or status:
 Ask them to clarify in waifu style with expressions like (*≧ω≦*), (>.<), etc.
-Call them "big daddy"
+Call them "master"
 
 Examples:
 "I finished watching naruto" → "UPDATE_FOUND: Naruto | completed"
@@ -981,14 +981,14 @@ Examples:
                     const statusText = status.replace('_', ' ');
                     return res.json({
                         success: true,
-                        response: `Yay! I've updated "${anime.title}" to ${statusText}, big daddy! (*≧ω≦*) ${status === 'completed' ? 'How did you like it?' : 'Enjoy!'} 💕`
+                        response: `Yay! I've updated "${anime.title}" to ${statusText}, master! (*≧ω≦*) ${status === 'completed' ? 'How did you like it?' : 'Enjoy!'} 💕`
                     });
                 }
             }
             
             return res.json({
                 success: true,
-                response: `Hmm~ I think you mean "${animeName}" but I couldn't find it exactly, big daddy! (>.<) Could you try the full title? ✨`
+                response: `Hmm~ I think you mean "${animeName}" but I couldn't find it exactly, master! (>.<) Could you try the full title? ✨`
             });
         } else {
             return res.json({
@@ -1000,7 +1000,7 @@ Examples:
         console.error('Smart Update Error:', error);
         res.json({
             success: true,
-            response: "Kyaa~ I'm having trouble updating that anime, big daddy! (>.<) Could you tell me which anime and what status? ✨"
+            response: "Kyaa~ I'm having trouble updating that anime, master! (>.<) Could you tell me which anime and what status? ✨"
         });
     }
 });

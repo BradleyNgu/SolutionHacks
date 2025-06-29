@@ -368,14 +368,14 @@ class MALService {
     // Helper method to format anime list for waifu responses
     formatAnimeListForWaifu(animeList) {
         if (!animeList || animeList.length === 0) {
-            return "It looks like your anime list is empty, big daddy! (>.<) Let me help you find some amazing anime to watch! ✨";
+            return "It looks like your anime list is empty, Master! (>.<) Let me help you find some amazing anime to watch! ✨";
         }
 
         const watching = animeList.filter(a => a.myStatus === 'watching');
         const completed = animeList.filter(a => a.myStatus === 'completed');
         const planToWatch = animeList.filter(a => a.myStatus === 'plan_to_watch');
 
-        let response = `Kyaa~ Here's your anime list summary, big daddy! (*≧ω≦*)\n\n`;
+        let response = `Kyaa~ Here's your anime list summary, Master! (*≧ω≦*)\n\n`;
         
         if (watching.length > 0) {
             response += `📺 Currently Watching (${watching.length}):\n`;
