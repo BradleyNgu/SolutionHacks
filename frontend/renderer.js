@@ -79,10 +79,12 @@ function showChatWindow() {
   chatWindow.classList.remove('chat-hidden');
   chatInput.focus();
   addMessage('maid', 'Okaerinasai, Goshujin! How can I help you today? 💕');
+  window.api.setChatOpen(true);
 }
 
 function hideChatWindow() {
   chatWindow.classList.add('chat-hidden');
+  window.api.setChatOpen(false);
 }
 
 function addMessage(sender, text) {

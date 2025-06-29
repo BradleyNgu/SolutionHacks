@@ -4,6 +4,11 @@ const path = require('path');
 
 let mainWindow;
 let tray;
+let isChatOpen = false;
+
+ipcMain.on('chat-open-state', (event, state) => {
+  isChatOpen = state;
+});
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
@@ -57,7 +62,7 @@ function createWindow() {
   }
 
   function moveToRandomPoint() {
-    if (moving) return;
+    if (moving || isChatOpen) return;
     const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
     const maxX = screenWidth - windowWidth;
     const maxY = screenHeight - windowHeight;

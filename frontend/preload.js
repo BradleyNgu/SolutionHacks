@@ -6,5 +6,7 @@ contextBridge.exposeInMainWorld('api', {
   onShowChatWindow: (callback) => {
     ipcRenderer.on('show-chat-window', callback);
   },
+  setChatOpen: (isOpen) => ipcRenderer.send('chat-open-state', isOpen),
   getGeminiKey: () => process.env.GEMINI_KEY
+  
 });
