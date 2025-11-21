@@ -5,3 +5,5 @@ with the ability to not only converse with you, but also manage your own MyAnime
 
 Demo Video:
 https://youtu.be/OHxGY2OEQ0k
+
+![MEIDO-CHAN OWNS GPT](meidogtav.png)
